@@ -9,6 +9,9 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
 
 @Entity
 @Table(name = "users")
@@ -26,7 +29,16 @@ public class User {
     private String gender;
     private String imagelink;
     private String phoneNumber;
+	private String role;
     
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String string) {
+		this.role = string;
+	}
+
 	@Column(name = "verification_token", length = 255)
     private String verificationToken;
     
@@ -149,6 +161,16 @@ public class User {
 
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
+	}
+
+    public boolean isEnabled() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'isEnabled'");
+    }
+
+	public void setAuthorities(List<GrantedAuthority> authorities) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'setAuthorities'");
 	}
 
 }
