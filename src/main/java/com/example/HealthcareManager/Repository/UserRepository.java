@@ -13,4 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     //上傳圖片路徑
     Optional<User> findById(Long id);
+
+    Optional<User> findByEmail(String email); // 自定義查詢方法
 }
