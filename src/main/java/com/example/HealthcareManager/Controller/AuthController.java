@@ -20,8 +20,6 @@ import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
 import com.example.HealthcareManager.Service.AccountService;
 
-
-import groovy.lang.Lazy;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -38,10 +36,7 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
     
-    @Autowired
-    public AuthController(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
-    }
+    
     
     @GetMapping("/register")
     public String getRegistrationPage() {
