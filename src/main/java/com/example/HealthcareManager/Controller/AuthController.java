@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,7 +21,6 @@ import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
 import com.example.HealthcareManager.Service.AccountService;
 
-import groovy.lang.Lazy;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -37,10 +37,7 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
     
-    @Autowired
-    public AuthController(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
-    }
+    
     
     @GetMapping("/register")
     public String getRegistrationPage() {
@@ -89,11 +86,6 @@ public class AuthController {
             // 如果验证成功，生成 JWT
             if (checkUserPasswordResponse.getStatusCode() == HttpStatus.OK) {
 
-//                String token = JwtUtil.generateToken(
-//                		accountRepository.findByUsername(vo.getUsername()).get().getId(),
-//                        vo.getUsername(),
-//                        accountRepository.findImageLinkByUsername(vo.getUsername()),
-//                        vo.getPassword(),accountRepository.findByUsername(vo.getUsername()).get().getEmail());
             	String token = JwtUtil.generateToken(
                 		accountRepository.findByUsername(user.getUsername()).get().getId());
                 System.out.println("id is(at login) " + accountRepository.findByUsername(user.getUsername()).get().getId());
@@ -114,5 +106,43 @@ public class AuthController {
         return null;
     }
     
+    @PostMapping("/validate-token")
+	public ResponseEntity<Map<String, String>> getProtectedData(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+	    
+    	// 檢查 Authorization 頭是否存在
+	    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+	        Map<String, String> responseBody = new HashMap<>();
+	        responseBody.put("message", "缺少或無效的 Authorization");
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+	    }
+	    
+	    try {
+	        // 提取 token
+	        String token = authHeader.replace("Bearer ", "").trim();
+	        Long id = JwtUtil.extractId(token);
+	        
+	        // 檢查 token 和 username 的有效性
+	        if (id == null || !JwtUtil.validateToken(token)) {
+	            Map<String, String> responseBody = new HashMap<>();
+	            responseBody.put("message", "無效的token");
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+	        }
+
+	        // 生成保護的數據
+	        Map<String, String> responseBody = new HashMap<>();
+	        responseBody.put("username", accountRepository.findById(id).get().getUsername());
+	        responseBody.put("id", String.valueOf(id));
+	        responseBody.put("userImage", accountRepository.findById(id).get().getImagelink());
+	        responseBody.put("password", accountRepository.findById(id).get().getPassword());
+	        responseBody.put("email", accountRepository.findById(id).get().getEmail());
+	        
+	        return ResponseEntity.ok(responseBody);
+	    } catch (Exception e) {
+	        // 捕獲異常並返回錯誤訊息
+	        Map<String, String> responseBody = new HashMap<>();
+	        responseBody.put("message", "伺服器錯誤：" + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+	    }
+	}
     
 }
