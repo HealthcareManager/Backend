@@ -9,16 +9,12 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-
-import org.springframework.security.core.GrantedAuthority;
 
 @Entity
 @Table(name = "users")
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+    private String id;
 
     private String username;
     private String email;
@@ -31,14 +27,6 @@ public class User {
     private String phoneNumber;
 	private String role;
     
-	public String getRole() {
-		return role;
-	}
-
-	public void setRole(String string) {
-		this.role = string;
-	}
-
 	@Column(name = "verification_token", length = 255)
     private String verificationToken;
     
@@ -51,7 +39,17 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
-    public String getPhoneNumber() {
+ // 无参构造函数
+    public User() {
+    }
+    
+    public User(String userId, String name, String email) {
+    	this.id = userId;
+        this.username = name;
+        this.email = email;
+	}
+
+	public String getPhoneNumber() {
 		return phoneNumber;
 	}
 
@@ -99,11 +97,11 @@ public class User {
 		this.accountLocked = accountLocked;
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
@@ -163,14 +161,12 @@ public class User {
 		this.createdAt = createdAt;
 	}
 
-    public boolean isEnabled() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isEnabled'");
-    }
+	public String getRole() {
+		return role;
+	}
 
-	public void setAuthorities(List<GrantedAuthority> authorities) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'setAuthorities'");
+	public void setRole(String role) {
+		this.role = role;
 	}
 
 }

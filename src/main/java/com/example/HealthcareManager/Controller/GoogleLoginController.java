@@ -67,7 +67,7 @@ public class GoogleLoginController {
 
                 // 生成 JWT Token，並將用戶信息封裝到 Token 中
                 CustomUserDetails userDetails = new CustomUserDetails(user);
-                String jwtToken = jwtService.generateToken(userDetails);
+                String jwtToken = jwtService.generateToken(user.getId(), userDetails);
 
                 // 返回響應，包含 JWT Token 及用戶信息
                 return ResponseEntity.ok(Map.of(

@@ -22,7 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("api/auth")
@@ -33,7 +32,7 @@ public class UserController {
 
     @PostMapping("/upload-image/{id}")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
-            @PathVariable(value = "id") Long id) {
+            @PathVariable(value = "id") String id) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("請選擇一個檔案來上傳。");
         }
