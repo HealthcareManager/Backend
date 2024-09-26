@@ -1,9 +1,12 @@
 package com.example.HealthcareManager.Controller;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,7 +40,9 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
     
-    
+    public AuthController(AccountService accountService) {
+        this.accountService = accountService;
+    }
     
     @GetMapping("/register")
     public String getRegistrationPage() {
@@ -49,6 +54,28 @@ public class AuthController {
 
         ResponseEntity<String> response = accountService.registerUser(user);
         return response;
+    }
+    
+    @PostMapping("/google-login")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> tokenData) {
+    	System.out.println("Received ID Token: " + tokenData); 
+    	String idToken = tokenData.get("idToken");
+        try {
+            Optional<User> user = accountService.verifyGoogleToken(idToken);
+            // 在这里您可以将用户信息存储到数据库，生成 JWT 等操作
+            System.out.println("user at google login is " + user);
+            if (user.isPresent()) {
+                User userInfo = user.get();
+                // 创建响应体，您可以选择要返回的用户信息
+                User userResponse = new User(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail());
+
+                return ResponseEntity.ok(userResponse);
+            } else {
+                return ResponseEntity.status(400).body("Invalid Google token or user not found.");
+            }
+        } catch (GeneralSecurityException | IOException e) {
+            return ResponseEntity.status(401).body("Invalid token: " + e.getMessage());
+        }
     }
     
     @PostMapping("/login")

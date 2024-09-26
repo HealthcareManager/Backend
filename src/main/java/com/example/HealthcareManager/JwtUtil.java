@@ -12,7 +12,7 @@ public class JwtUtil {
     private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     // 生成JWT token
-    public static String generateToken(Long id) {
+    public static String generateToken(String id) {
         return Jwts.builder()
                 .setSubject(id.toString())
                 .setIssuedAt(new Date())

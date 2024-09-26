@@ -13,9 +13,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+    private String id;
 
     private String username;
     private String email;
@@ -39,7 +38,17 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
-    public String getPhoneNumber() {
+ // 无参构造函数
+    public User() {
+    }
+    
+    public User(String userId, String name, String email) {
+    	this.id = userId;
+        this.username = name;
+        this.email = email;
+	}
+
+	public String getPhoneNumber() {
 		return phoneNumber;
 	}
 
@@ -87,11 +96,11 @@ public class User {
 		this.accountLocked = accountLocked;
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

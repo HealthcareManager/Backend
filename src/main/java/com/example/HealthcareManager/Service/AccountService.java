@@ -7,9 +7,19 @@ import org.springframework.stereotype.Service;
 
 import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 
+import io.jsonwebtoken.io.IOException;
+
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 
 @Service
@@ -17,7 +27,6 @@ public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
-    
     
     //private EmailService emailService;
     
@@ -47,8 +56,46 @@ public class AccountService {
                                 .orElse(false);
     }
     
+    public String generateNumericId() {
+        UUID uuid = UUID.randomUUID();
+        BigInteger bigInt = new BigInteger(uuid.toString().replace("-", ""), 16); // 从 UUID 字符串生成 BigInteger
+        return bigInt.toString(); // 将其转换为数字字符串
+    }
+    
     // 檢查使用者輸入密碼是否正確，錯誤則計數，滿三次鎖定帳戶
     private static final int MAX_LOGIN_ATTEMPTS = 5;
+    private static final String CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google 客户端 ID
+    
+    public Optional<User> verifyGoogleToken(String idTokenString) throws GeneralSecurityException, IOException, java.io.IOException {
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
+                .setAudience(Collections.singletonList(CLIENT_ID))
+                .build();
+
+        GoogleIdToken idToken = verifier.verify(idTokenString);
+        if (idToken != null) {
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String userId = payload.getSubject();	// 用户的唯一 ID
+            String name = (String) payload.get("name");
+            String email = payload.getEmail();
+            System.out.println("userId, name, email is " + userId + name + email);
+            
+         // 检查用户是否已注册
+            Optional<User> existingUser = accountRepository.findByEmail(email); // 假设你有一个方法查找用户
+            System.out.println("existingUser is " + existingUser);
+            if (existingUser == null) {
+                // 用户未注册，创建新用户
+                User newUser = new User(userId, name, email);
+                accountRepository.save(newUser); // 保存到数据库
+                return Optional.of(newUser);
+            } else {
+                // 用户已注册，直接返回该用户
+                return existingUser;
+            }
+        } else {
+            throw new IOException("Invalid ID token.");
+        }
+
+    }
 
     public ResponseEntity<String> checkUserPassword(String username, String inputPassword) {
         Optional<User> optionalUser = accountRepository.findByUsername(username);
@@ -86,19 +133,20 @@ public class AccountService {
             //user.setCreatedDate(LocalDateTime.now()); //設置註冊日期
             // 發送郵件
             //emailService.sendVerificationEmail(vo, token);
+        	String uniqueId = generateNumericId();
+            user.setId(uniqueId); 
             accountRepository.save(user);
             return true;
         } catch (Exception e) {
-        	
             return false;
         }
     }
     
     public ResponseEntity<String> registerUser(User user) {
         // 檢查用戶名是否已存在
-        if (accountRepository.findByUsername(user.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body("該用戶名已被使用!");
-        }
+//        if (accountRepository.findByUsername(user.getUsername()).isPresent()) {
+//            return ResponseEntity.badRequest().body("該用戶名已被使用!");
+//        }
 
         // 檢查電子郵件是否已存在
         if (accountRepository.findByEmail(user.getEmail()).isPresent()) {
