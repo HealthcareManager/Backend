@@ -151,13 +151,8 @@ public class AccountService {
 
         CustomUserDetails userDetails = new CustomUserDetails(userdetail);
         Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("username", user.getUsername());
-        responseBody.put("id", user.getId());
-        responseBody.put("userImage", user.getImagelink());
-        responseBody.put("email", user.getEmail());
-        responseBody.put("role", user.getRole());
         jwtToken = jwtService.generateToken(user.getId(), userDetails);
-        responseBody.put("jwt token", jwtToken);
+        responseBody.put("token", jwtToken);
         return responseBody;
     }
 }
