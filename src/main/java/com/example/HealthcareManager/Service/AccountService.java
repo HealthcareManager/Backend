@@ -1,10 +1,15 @@
 package com.example.HealthcareManager.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.HealthcareManager.Model.User;
@@ -39,17 +44,77 @@ public class AccountService {
     private JwtService jwtService;
 
     private static final int MAX_LOGIN_ATTEMPTS = 5;
-    private static final String CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google
-
+    private static final String Google_CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google
+    private static final String LINE_TOKEN_URL = "https://api.line.me/oauth2/v2.1/token";
+    private static final String LINE_USER_INFO_URL = "https://api.line.me/v2/profile";
+    private static final String LINE_Channel_ID = "2006371057"; // 从 LINE Developers 获取
+    private static final String LINE_CLIENT_SECRET = "b0fc2958b7a310628b4d3bcb6ccdda00"; // 从 LINE Developers 获取
+    private static final String LINE_REDIRECT_URI = "http://192.168.50.38:8080/HealthcareManager/api/auth/line-callback";
+    
     // 移除 @Autowired 和構造函數中的 User 注入
     public AccountService() {
+    }
+    
+    public Optional<User> getLineAccessToken(String code) {
+        RestTemplate restTemplate = new RestTemplate();
+        // 构建请求体
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "authorization_code");
+        body.add("code", code);
+        body.add("redirect_uri", LINE_REDIRECT_URI);
+        body.add("client_id", LINE_Channel_ID);
+        body.add("client_secret", LINE_CLIENT_SECRET);
+        System.out.println("body send to line is " + body);
+
+        // 发送 POST 请求以获取访问令牌
+        ResponseEntity<Map> response = restTemplate.postForEntity(LINE_TOKEN_URL, body, Map.class);
+        Map<String, Object> responseBody = response.getBody();
+        System.out.println("responseBody is " + responseBody);
+
+        // 返回访问令牌
+        String accessToken = responseBody != null ? (String) responseBody.get("access_token") : null;
+
+        if (accessToken != null) {
+            // 直接使用访问令牌获取用户信息
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            // 发送 GET 请求以获取用户信息
+            ResponseEntity<Map> userInfoResponse = restTemplate.exchange(LINE_USER_INFO_URL, HttpMethod.GET, entity, Map.class);
+            Map<String, Object> userInfo = userInfoResponse.getBody();
+            System.out.println("userInfo is " + userInfo);
+
+            // 检查用户信息是否存在
+            if (userInfo != null) {
+                String userId = (String) userInfo.get("userId"); // 假设用户信息中有 userId 字段
+                Optional<User> existingUser = accountRepository.findById(userId);
+                System.out.println("displayName is " + existingUser);
+                if (!existingUser.isPresent()) {
+                    // 如果用户不存在，则新增用户
+                    User newUser = new User();
+                    newUser.setId(userId);
+                    //newUser.setEmail((String) userInfo.get("email")); // 假设用户信息中有 email 字段
+                    newUser.setUsername((String) userInfo.get("displayName")); // 假设用户信息中有 name 字段
+                    newUser.setImagelink(((String) userInfo.get("pictureUrl")));;
+                    // 设置其他必要的字段
+
+                    accountRepository.save(newUser);
+                    return Optional.of(newUser); // 返回新创建的用户
+                }
+
+                return existingUser; // 如果用户存在，返回现有用户
+            }
+        }
+
+        return Optional.empty(); // 如果访问令牌为空，返回空的 Optional
     }
 
     public Optional<User> verifyGoogleToken(String idTokenString)
             throws GeneralSecurityException, IOException, java.io.IOException {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(GoogleNetHttpTransport.newTrustedTransport(),
                 GsonFactory.getDefaultInstance())
-                .setAudience(Collections.singletonList(CLIENT_ID))
+                .setAudience(Collections.singletonList(Google_CLIENT_ID))
                 .build();
 
         GoogleIdToken idToken = verifier.verify(idTokenString);
