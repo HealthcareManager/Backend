@@ -144,6 +144,8 @@ public class AccountService {
         responseBody.put("height", user.getHeight().toString());
         responseBody.put("weight", user.getWeight().toString());
         responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
+        jwtToken = jwtService.generateToken(user.getId(), userDetails);
+        responseBody.put("token", jwtToken);
         return responseBody;
     }
 }
