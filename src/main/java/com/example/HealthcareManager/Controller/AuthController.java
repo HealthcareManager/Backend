@@ -49,6 +49,7 @@ public class AuthController {
         return accountService.registerUser(user);
     }
 
+
     @PostMapping("/google-login")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> tokenData) {
         String idToken = tokenData.get("idToken");
