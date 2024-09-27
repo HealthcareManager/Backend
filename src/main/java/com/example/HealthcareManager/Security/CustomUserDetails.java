@@ -24,7 +24,6 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // 假設 user.getRole() 返回的角色用逗號分隔
         String rolesString = user.getRole();
-        System.out.println(rolesString);
         String[] rolesArray = rolesString.split(","); // 根據逗號分隔角色
 
         // 將角色轉換為 GrantedAuthority 集合
@@ -40,6 +39,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
+    	System.out.println("id at CUD is" + user.getId());
         return user.getId();
     }
 
