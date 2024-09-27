@@ -6,10 +6,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "health_metrics")
 public class HealthMetrics {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -22,8 +21,8 @@ public class HealthMetrics {
     private Double caloriesBurned;
     private Double sleepDuration;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+	@Column(name = "created_at")
+	private LocalDateTime createdAt;
 
     // 無參構造函數
     public HealthMetrics() {
