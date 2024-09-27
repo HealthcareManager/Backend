@@ -40,6 +40,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
+    	System.out.println("id at CUD is" + user.getId());
         return user.getId();
     }
 

@@ -153,6 +153,7 @@ public class AccountService {
         Map<String, String> responseBody = new HashMap<>();
         jwtToken = jwtService.generateToken(user.getId(), userDetails);
         responseBody.put("token", jwtToken);
+        System.out.println("token create ：" + responseBody);
         return responseBody;
     }
 }

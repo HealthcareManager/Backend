@@ -41,6 +41,8 @@ public class AuthController {
 
     @Autowired
     private AccountRepository accountRepository;
+    
+    @Autowired JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
@@ -65,6 +67,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody User user) {
+    	System.out.println("user is " + user);
         return accountService.login(user);
     }
 
@@ -81,7 +84,7 @@ public class AuthController {
         // // 提取 JWT
         // String jwt = authHeader.substring(7);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+        System.out.println("authentication is " + authentication);
         // 从 JWT 中获取用户名并查询用户信息
         // if (authentication == null || !authentication.isAuthenticated()) {
         //     Map<String, String> responseBody = new HashMap<>();
@@ -89,9 +92,11 @@ public class AuthController {
         //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         // }
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUsername(); // 获取用户 ID
+//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+//        System.out.println("userDetails is " + userDetails);
+        String userId = jwtService.extractId(authHeader.replace("Bearer ", "").trim()); // 获取用户 ID
         Optional<User> optionalUser = accountRepository.findById(userId); 
+    
 
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
