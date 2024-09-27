@@ -41,11 +41,14 @@ public class AuthController {
 
     @Autowired
     private AccountRepository accountRepository;
+    
+    @Autowired JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
         return accountService.registerUser(user);
     }
+
 
     @PostMapping("/google-login")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> tokenData) {
@@ -54,6 +57,7 @@ public class AuthController {
             Optional<User> user = accountService.verifyGoogleToken(idToken);
             if (user.isPresent()) {
                 User userInfo = user.get();
+                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： " + userInfo.getUsername() + " Email： " + userInfo.getEmail());
                 return ResponseEntity.ok(new User(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail()));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
@@ -65,6 +69,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody User user) {
+    	System.out.println("user is " + user);
         return accountService.login(user);
     }
 
@@ -77,22 +82,18 @@ public class AuthController {
         //     responseBody.put("message", "缺少或无效的 Authorization");
         //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         // }
-
         // // 提取 JWT
         // String jwt = authHeader.substring(7);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         // 从 JWT 中获取用户名并查询用户信息
         // if (authentication == null || !authentication.isAuthenticated()) {
         //     Map<String, String> responseBody = new HashMap<>();
         //     responseBody.put("message", "无效的 JWT");
         //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         // }
-
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String userId = userDetails.getUsername(); // 获取用户 ID
         Optional<User> optionalUser = accountRepository.findById(userId); 
-
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             Map<String, String> responseBody = new HashMap<>();
@@ -108,5 +109,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
         }
     }
+
+    // @PostMapping("/test")
+    // public String test() {
+    //     return "test";
+    // }
 
 }

@@ -23,22 +23,17 @@ import org.springframework.web.cors.CorsConfiguration;
 @Configuration
 public class SecurityConfiguration {
 
-	private final AuthenticationProvider authenticationProvider;
-	private final JwtAuthenticationFilter jwtAuthFilter;
+    private final AuthenticationProvider authenticationProvider;
 
-	@Autowired
-	CustomOAuth2UserService customOAuth2UserService;
+    private final JwtAuthenticationFilter jwtAuthFilter;
 
-	@Autowired
-	JwtService jwtService;
+    @Autowired
+    public SecurityConfiguration(AuthenticationProvider authenticationProvider, JwtAuthenticationFilter jwtAuthFilter) {
+        this.authenticationProvider = authenticationProvider;
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
 
-	@Autowired
-	public SecurityConfiguration(AuthenticationProvider authenticationProvider, JwtAuthenticationFilter jwtAuthFilter) {
-		this.authenticationProvider = authenticationProvider;
-		this.jwtAuthFilter = jwtAuthFilter;
-	}
-
-	@Bean
+    @Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.cors(cors -> cors.configurationSource(request -> {
 			CorsConfiguration corsConfig = new CorsConfiguration();
@@ -55,7 +50,7 @@ public class SecurityConfiguration {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authenticationProvider(authenticationProvider)
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
 		return http.build();
 	}
 }
+
