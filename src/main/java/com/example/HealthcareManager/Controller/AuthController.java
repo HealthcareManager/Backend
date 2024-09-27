@@ -102,6 +102,10 @@ public class AuthController {
             responseBody.put("userImage", user.getImagelink());
             responseBody.put("email", user.getEmail());
             responseBody.put("password", user.getPassword());
+            responseBody.put("gender", user.getGender());
+            responseBody.put("height", user.getHeight().toString());
+            responseBody.put("weight", user.getWeight().toString());
+            responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
             return ResponseEntity.ok(responseBody);
         } else {
             Map<String, String> responseBody = new HashMap<>();

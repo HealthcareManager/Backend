@@ -4,6 +4,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### MAC ###
+.DS_Store
+
+
 ### STS ###
 .apt_generated
 .classpath
@@ -36,3 +40,4 @@ src/main/resources/application.properties
 src/main/resources/application.properties
 /bin/
 /src/main/assets
+src/main/resources/static/images
