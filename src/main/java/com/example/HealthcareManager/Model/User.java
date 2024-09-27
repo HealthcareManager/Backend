@@ -25,6 +25,7 @@ public class User {
     private String gender;
     private String imagelink;
     private String phoneNumber;
+	private String role;
     
 	@Column(name = "verification_token", length = 255)
     private String verificationToken;
@@ -158,6 +159,14 @@ public class User {
 
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
+	}
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
 	}
 
 }

@@ -14,23 +14,22 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "health_metrics")
 public class HealthMetrics {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+	@ManyToOne
+	@JoinColumn(name = "user_id", nullable = false)
+	private User user;
 
-    private LocalDateTime date;
-    private Integer steps;
-    private Integer heartRate;
-    private Double caloriesBurned;
-    private Double sleepDuration;
-    private String bloodPressure;
+	@Column(name = "heart_rate")
+	private Integer heartRate;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+	@Column(name = "blood_pressure")
+	private String bloodPressure;
+
+	@Column(name = "created_at")
+	private LocalDateTime createdAt;
 
 	public Long getId() {
 		return id;
@@ -48,44 +47,12 @@ public class HealthMetrics {
 		this.user = user;
 	}
 
-	public LocalDateTime getDate() {
-		return date;
-	}
-
-	public void setDate(LocalDateTime date) {
-		this.date = date;
-	}
-
-	public Integer getSteps() {
-		return steps;
-	}
-
-	public void setSteps(Integer steps) {
-		this.steps = steps;
-	}
-
 	public Integer getHeartRate() {
 		return heartRate;
 	}
 
 	public void setHeartRate(Integer heartRate) {
 		this.heartRate = heartRate;
-	}
-
-	public Double getCaloriesBurned() {
-		return caloriesBurned;
-	}
-
-	public void setCaloriesBurned(Double caloriesBurned) {
-		this.caloriesBurned = caloriesBurned;
-	}
-
-	public Double getSleepDuration() {
-		return sleepDuration;
-	}
-
-	public void setSleepDuration(Double sleepDuration) {
-		this.sleepDuration = sleepDuration;
 	}
 
 	public String getBloodPressure() {
