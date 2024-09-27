@@ -8,8 +8,6 @@ import org.springframework.stereotype.Service;
 
 import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
-import com.example.HealthcareManager.Security.CustomUserDetails;
-import com.example.HealthcareManager.Security.JwtService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -32,16 +30,9 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
-    @Autowired
-    private JwtService jwtService;
-
     private static final int MAX_LOGIN_ATTEMPTS = 5;
-    private static final String CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google
-
-    // 移除 @Autowired 和構造函數中的 User 注入
-    public AccountService() {
-    }
-
+    private static final String CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的
+                                                                                                                        // Google
     public Optional<User> verifyGoogleToken(String idTokenString)
             throws GeneralSecurityException, IOException, java.io.IOException {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(GoogleNetHttpTransport.newTrustedTransport(),
@@ -58,7 +49,7 @@ public class AccountService {
             System.out.println("userId, name, email is " + userId + name + email);
 
             // 检查用户是否已注册
-            Optional<User> existingUser = accountRepository.findByEmail(email);
+            Optional<User> existingUser = accountRepository.findByEmail(email); // 假设你有一个方法查找用户
             System.out.println("existingUser is " + existingUser);
             if (existingUser == null) {
                 // 用户未注册，创建新用户
@@ -72,6 +63,7 @@ public class AccountService {
         } else {
             throw new IOException("Invalid ID token.");
         }
+
     }
 
     public ResponseEntity<String> registerUser(User user) {
@@ -142,22 +134,16 @@ public class AccountService {
         return UUID.randomUUID().toString().replace("-", "");
     }
 
-    // 移除成員變量中的 user，並在需要時手動創建
-    private String jwtToken;
-
     private Map<String, String> createLoginResponse(User user) {
-        User userdetail = accountRepository.findById(user.getId())
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        CustomUserDetails userDetails = new CustomUserDetails(userdetail);
         Map<String, String> responseBody = new HashMap<>();
         responseBody.put("username", user.getUsername());
         responseBody.put("id", user.getId());
         responseBody.put("userImage", user.getImagelink());
         responseBody.put("email", user.getEmail());
-        responseBody.put("role", user.getRole());
-        jwtToken = jwtService.generateToken(user.getId(), userDetails);
-        responseBody.put("jwt token", jwtToken);
+        responseBody.put("gender", user.getGender());
+        responseBody.put("height", user.getHeight().toString());
+        responseBody.put("weight", user.getWeight().toString());
+        responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
         return responseBody;
     }
 }

@@ -17,7 +17,7 @@ public interface AccountRepository extends JpaRepository<User, String> {
     // 根據驗證 token 查詢帳戶
     Optional<User> findByVerificationToken(String verificationToken);
     
-    Optional<User> findById(String uniqueId);
+    Optional<User> findById(String id);
     
 //    @Query("SELECT a.imagelink FROM user a WHERE a.username = :username")
 //    String findImageLinkByUsername(@Param("username") String username);
