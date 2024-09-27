@@ -5,11 +5,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
 import com.example.HealthcareManager.Security.CustomUserDetails;
 import com.example.HealthcareManager.Security.JwtService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -73,6 +76,40 @@ public class AccountService {
             throw new IOException("Invalid ID token.");
         }
     }
+    
+    public Optional<User> verifyFacebookToken(String idTokenString)
+            throws GeneralSecurityException, IOException, java.io.IOException {
+        String url = String.format("https://graph.facebook.com/me?access_token=%s&fields=id,name,email", idTokenString.replace("\"", ""));
+        System.out.println("url is " + url);
+
+        RestTemplate restTemplate = new RestTemplate();
+        String response = restTemplate.getForObject(url, String.class);
+        System.out.println("Response from Facebook: " + response);
+
+        // 将返回结果转换为 Map，以便获取特定字段
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> userMap = objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {});
+
+        // 提取字段
+        String facebookId = (String) userMap.get("id");
+        String name = (String) userMap.get("name");
+        String email = (String) userMap.get("email");
+
+        Optional<User> existingUser = accountRepository.findById(facebookId);
+        if (!existingUser.isPresent()) {
+            // 创建新用户
+            User newUser = new User(facebookId, name, email); // 使用 username
+            accountRepository.save(newUser);
+            return Optional.of(newUser);
+        } else {
+            // 更新用户资料（如果需要）
+            existingUser.get().setUsername(name);
+            existingUser.get().setEmail(email);
+            accountRepository.save(existingUser.get());
+            return existingUser;
+        }
+    }
+
 
     public ResponseEntity<String> registerUser(User user) {
         if (accountRepository.findByEmail(user.getEmail()).isPresent()) {
@@ -140,6 +177,18 @@ public class AccountService {
 
     public String generateNumericId() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+    
+    private String decodeUnicode(String unicode) {
+        StringBuilder string = new StringBuilder();
+        String[] unicodeArr = unicode.split("\\\\u");
+        for (String s : unicodeArr) {
+            if (s.length() > 0) {
+                int codePoint = Integer.parseInt(s, 16);
+                string.append((char) codePoint);
+            }
+        }
+        return string.toString();
     }
 
     // 移除成員變量中的 user，並在需要時手動創建
