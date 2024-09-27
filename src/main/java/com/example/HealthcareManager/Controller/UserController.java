@@ -45,8 +45,8 @@ public class UserController {
         try {
             String uploadDir = new File(System.getProperty("user.dir"))
                     .getAbsolutePath() + File.separator + "src"
-                    + File.separator + "main" + File.separator + "assets"
-                    + File.separator + "images"; // 確保該路徑正確
+                    + File.separator + "main" + File.separator + "resources"
+                    + File.separator + "static" + File.separator + "images"; // 確保該路徑正確
 
             // 查詢資料庫以獲取原有的圖片路徑
             User user = userService.getUserById(id);
