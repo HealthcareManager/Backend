@@ -57,6 +57,7 @@ public class AuthController {
             Optional<User> user = accountService.verifyGoogleToken(idToken);
             if (user.isPresent()) {
                 User userInfo = user.get();
+                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： " + userInfo.getUsername() + " Email： " + userInfo.getEmail());
                 return ResponseEntity.ok(new User(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail()));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
@@ -107,6 +108,10 @@ public class AuthController {
             responseBody.put("userImage", user.getImagelink());
             responseBody.put("email", user.getEmail());
             responseBody.put("password", user.getPassword());
+            responseBody.put("gender", user.getGender());
+            responseBody.put("height", user.getHeight().toString());
+            responseBody.put("weight", user.getWeight().toString());
+            responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
             return ResponseEntity.ok(responseBody);
         } else {
             Map<String, String> responseBody = new HashMap<>();
