@@ -1,15 +1,23 @@
 package com.example.HealthcareManager.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
 import com.example.HealthcareManager.Security.CustomUserDetails;
 import com.example.HealthcareManager.Security.JwtService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -36,17 +44,77 @@ public class AccountService {
     private JwtService jwtService;
 
     private static final int MAX_LOGIN_ATTEMPTS = 5;
-    private static final String CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google
-
+    private static final String Google_CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google
+    private static final String LINE_TOKEN_URL = "https://api.line.me/oauth2/v2.1/token";
+    private static final String LINE_USER_INFO_URL = "https://api.line.me/v2/profile";
+    private static final String LINE_Channel_ID = "2006371057"; // 从 LINE Developers 获取
+    private static final String LINE_CLIENT_SECRET = "b0fc2958b7a310628b4d3bcb6ccdda00"; // 从 LINE Developers 获取
+    private static final String LINE_REDIRECT_URI = "http://192.168.50.38:8080/HealthcareManager/api/auth/line-callback";
+    
     // 移除 @Autowired 和構造函數中的 User 注入
     public AccountService() {
+    }
+    
+    public Optional<User> getLineAccessToken(String code) {
+        RestTemplate restTemplate = new RestTemplate();
+        // 构建请求体
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "authorization_code");
+        body.add("code", code);
+        body.add("redirect_uri", LINE_REDIRECT_URI);
+        body.add("client_id", LINE_Channel_ID);
+        body.add("client_secret", LINE_CLIENT_SECRET);
+        System.out.println("body send to line is " + body);
+
+        // 发送 POST 请求以获取访问令牌
+        ResponseEntity<Map> response = restTemplate.postForEntity(LINE_TOKEN_URL, body, Map.class);
+        Map<String, Object> responseBody = response.getBody();
+        System.out.println("responseBody is " + responseBody);
+
+        // 返回访问令牌
+        String accessToken = responseBody != null ? (String) responseBody.get("access_token") : null;
+
+        if (accessToken != null) {
+            // 直接使用访问令牌获取用户信息
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            // 发送 GET 请求以获取用户信息
+            ResponseEntity<Map> userInfoResponse = restTemplate.exchange(LINE_USER_INFO_URL, HttpMethod.GET, entity, Map.class);
+            Map<String, Object> userInfo = userInfoResponse.getBody();
+            System.out.println("userInfo is " + userInfo);
+
+            // 检查用户信息是否存在
+            if (userInfo != null) {
+                String userId = (String) userInfo.get("userId"); // 假设用户信息中有 userId 字段
+                Optional<User> existingUser = accountRepository.findById(userId);
+                System.out.println("displayName is " + existingUser);
+                if (!existingUser.isPresent()) {
+                    // 如果用户不存在，则新增用户
+                    User newUser = new User();
+                    newUser.setId(userId);
+                    //newUser.setEmail((String) userInfo.get("email")); // 假设用户信息中有 email 字段
+                    newUser.setUsername((String) userInfo.get("displayName")); // 假设用户信息中有 name 字段
+                    newUser.setImagelink(((String) userInfo.get("pictureUrl")));;
+                    // 设置其他必要的字段
+
+                    accountRepository.save(newUser);
+                    return Optional.of(newUser); // 返回新创建的用户
+                }
+
+                return existingUser; // 如果用户存在，返回现有用户
+            }
+        }
+
+        return Optional.empty(); // 如果访问令牌为空，返回空的 Optional
     }
 
     public Optional<User> verifyGoogleToken(String idTokenString)
             throws GeneralSecurityException, IOException, java.io.IOException {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(GoogleNetHttpTransport.newTrustedTransport(),
                 GsonFactory.getDefaultInstance())
-                .setAudience(Collections.singletonList(CLIENT_ID))
+                .setAudience(Collections.singletonList(Google_CLIENT_ID))
                 .build();
 
         GoogleIdToken idToken = verifier.verify(idTokenString);
@@ -73,6 +141,40 @@ public class AccountService {
             throw new IOException("Invalid ID token.");
         }
     }
+    
+    public Optional<User> verifyFacebookToken(String idTokenString)
+            throws GeneralSecurityException, IOException, java.io.IOException {
+        String url = String.format("https://graph.facebook.com/me?access_token=%s&fields=id,name,email", idTokenString.replace("\"", ""));
+        System.out.println("url is " + url);
+
+        RestTemplate restTemplate = new RestTemplate();
+        String response = restTemplate.getForObject(url, String.class);
+        System.out.println("Response from Facebook: " + response);
+
+        // 将返回结果转换为 Map，以便获取特定字段
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> userMap = objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {});
+
+        // 提取字段
+        String facebookId = (String) userMap.get("id");
+        String name = (String) userMap.get("name");
+        String email = (String) userMap.get("email");
+
+        Optional<User> existingUser = accountRepository.findById(facebookId);
+        if (!existingUser.isPresent()) {
+            // 创建新用户
+            User newUser = new User(facebookId, name, email); // 使用 username
+            accountRepository.save(newUser);
+            return Optional.of(newUser);
+        } else {
+            // 更新用户资料（如果需要）
+            existingUser.get().setUsername(name);
+            existingUser.get().setEmail(email);
+            accountRepository.save(existingUser.get());
+            return existingUser;
+        }
+    }
+
 
     public ResponseEntity<String> registerUser(User user) {
         if (accountRepository.findByEmail(user.getEmail()).isPresent()) {
@@ -140,6 +242,18 @@ public class AccountService {
 
     public String generateNumericId() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+    
+    private String decodeUnicode(String unicode) {
+        StringBuilder string = new StringBuilder();
+        String[] unicodeArr = unicode.split("\\\\u");
+        for (String s : unicodeArr) {
+            if (s.length() > 0) {
+                int codePoint = Integer.parseInt(s, 16);
+                string.append((char) codePoint);
+            }
+        }
+        return string.toString();
     }
 
     // 移除成員變量中的 user，並在需要時手動創建
