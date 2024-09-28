@@ -110,21 +110,7 @@ public class AuthController {
     @PostMapping("/validate-token")
     public ResponseEntity<Map<String, String>> getProtectedData(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        // // 检查 Authorization 头是否存在
-        // if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        //     Map<String, String> responseBody = new HashMap<>();
-        //     responseBody.put("message", "缺少或无效的 Authorization");
-        //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
-        // }
-        // // 提取 JWT
-        // String jwt = authHeader.substring(7);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        // 从 JWT 中获取用户名并查询用户信息
-        // if (authentication == null || !authentication.isAuthenticated()) {
-        //     Map<String, String> responseBody = new HashMap<>();
-        //     responseBody.put("message", "无效的 JWT");
-        //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
-        // }
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String userId = userDetails.getUsername(); // 获取用户 ID
         Optional<User> optionalUser = accountRepository.findById(userId); 
@@ -147,12 +133,5 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
         }
     }
-    
-    
-
-    // @PostMapping("/test")
-    // public String test() {
-    //     return "test";
-    // }
 
 }

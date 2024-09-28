@@ -1,89 +1,97 @@
-package com.example.HealthcareManager.Model;
+// package com.example.HealthcareManager.Model;
 
-import java.time.LocalDateTime;
+// import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+// import jakarta.persistence.Column;
+// import jakarta.persistence.Entity;
+// import jakarta.persistence.GeneratedValue;
+// import jakarta.persistence.GenerationType;
+// import jakarta.persistence.Id;
+// import jakarta.persistence.JoinColumn;
+// import jakarta.persistence.ManyToOne;
+// import jakarta.persistence.Table;
 
-@Entity
-@Table(name = "exercise_log")
-public class ExerciseLog {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+// @Entity
+// @Table(name = "exercise_log")
+// public class ExerciseLog {
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+//     @Id
+//     @GeneratedValue(strategy = GenerationType.IDENTITY)
+//     private Long id;
 
-    private LocalDateTime date;
-    private String exerciseType;
-    private Double duration;
-    private Double caloriesBurned;
+//     @ManyToOne
+//     @JoinColumn(name = "user_id", nullable = false)
+//     private User user;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+//     @Column(name = "exercise_type")
+//     private String exerciseType;
 
-	public Long getId() {
-		return id;
-	}
+//     @Column(name = "duration")
+//     private Double duration;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+//     @Column(name = "calories_burned")
+//     private Double caloriesBurned;
 
-	public User getUser() {
-		return user;
-	}
+//     @Column(name = "kilometers")
+//     private float kilometers;
 
-	public void setUser(User user) {
-		this.user = user;
-	}
+//     @Column(name = "created_at")
+//     private LocalDateTime createdAt;
 
-	public LocalDateTime getDate() {
-		return date;
-	}
+//     // Getters and Setters
+//     public Long getId() {
+//         return id;
+//     }
 
-	public void setDate(LocalDateTime date) {
-		this.date = date;
-	}
+//     public void setId(Long id) {
+//         this.id = id;
+//     }
 
-	public String getExerciseType() {
-		return exerciseType;
-	}
+//     public User getUser() {
+//         return user;
+//     }
 
-	public void setExerciseType(String exerciseType) {
-		this.exerciseType = exerciseType;
-	}
+//     public void setUser(User user) {
+//         this.user = user;
+//     }
 
-	public Double getDuration() {
-		return duration;
-	}
+//     public String getExerciseType() {
+//         return exerciseType;
+//     }
 
-	public void setDuration(Double duration) {
-		this.duration = duration;
-	}
+//     public void setExerciseType(String exerciseType) {
+//         this.exerciseType = exerciseType;
+//     }
 
-	public Double getCaloriesBurned() {
-		return caloriesBurned;
-	}
+//     public Double getDuration() {
+//         return duration;
+//     }
 
-	public void setCaloriesBurned(Double caloriesBurned) {
-		this.caloriesBurned = caloriesBurned;
-	}
+//     public void setDuration(Double duration) {
+//         this.duration = duration;
+//     }
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
+//     public Double getCaloriesBurned() {
+//         return caloriesBurned;
+//     }
 
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
+//     public void setCaloriesBurned(Double caloriesBurned) {
+//         this.caloriesBurned = caloriesBurned;
+//     }
 
-}
+//     public float getKilometers() {
+//         return kilometers;
+//     }
+
+//     public void setKilometers(float kilometers) {
+//         this.kilometers = kilometers;
+//     }
+
+//     public LocalDateTime getCreatedAt() {
+//         return createdAt;
+//     }
+
+//     public void setCreatedAt(LocalDateTime createdAt) {
+//         this.createdAt = createdAt;
+//     }
+// }

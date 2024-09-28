@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "health_metrics")
 public class HealthMetrics {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -13,30 +14,30 @@ public class HealthMetrics {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @Column(name = "blood_pressure")
-    private String bloodPressure;
-
+    
     @Column(name = "heart_rate")
     private Integer heartRate;
 
+    @Column(name = "blood_pressure")
+    private String bloodPressure; 
+
     @Column(name = "blood_sugar")
-    private Float bloodSugar;
+    private Float bloodSugar; // 使用 Float 以保持一致性
 
     @Column(name = "blood_oxygen")
-    private Float bloodOxygen;
-
-    @Column(name = "steps")
-    private Integer steps;
+    private Float bloodOxygen; // 使用 Float 以保持一致性
 
     @Column(name = "calories_burned")
     private Double caloriesBurned;
+    
+    @Column(name = "date")
+    private LocalDateTime date;
 
     @Column(name = "sleep_duration")
     private Double sleepDuration;
 
-    @Column(name = "date")
-    private LocalDateTime date;
+    @Column(name = "steps")
+    private Integer steps;
 
     // 無參構造函數
     public HealthMetrics() {
@@ -56,7 +57,6 @@ public class HealthMetrics {
         this.date = date;
     }
 
-    // Getters 和 Setters
     public Long getId() {
         return id;
     }
@@ -73,14 +73,6 @@ public class HealthMetrics {
         this.user = user;
     }
 
-    public String getBloodPressure() {
-        return bloodPressure;
-    }
-
-    public void setBloodPressure(String bloodPressure) {
-        this.bloodPressure = bloodPressure;
-    }
-
     public Integer getHeartRate() {
         return heartRate;
     }
@@ -89,6 +81,14 @@ public class HealthMetrics {
         this.heartRate = heartRate;
     }
 
+    public String getBloodPressure() {
+        return bloodPressure;
+    }
+
+    public void setBloodPressure(String bloodPressure) {
+        this.bloodPressure = bloodPressure;
+    }
+    
     public Float getBloodSugar() {
         return bloodSugar;
     }
@@ -137,3 +137,5 @@ public class HealthMetrics {
         this.date = date;
     }
 }
+
+
