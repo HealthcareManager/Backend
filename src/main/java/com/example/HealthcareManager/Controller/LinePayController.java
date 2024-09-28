@@ -30,6 +30,6 @@ public class LinePayController {
     // 處理支付取消的回調
     @GetMapping("/cancel")
     public String cancelPayment() {
-        return "支付已取消";
+        return "支付已失敗";
     }
 }
