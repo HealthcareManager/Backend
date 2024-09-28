@@ -6,34 +6,54 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "health_metrics")
 public class HealthMetrics {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;  // 使用原本的 User 類
+    private User user;
 
-    private LocalDateTime date;
-    private Integer steps;
-    private Integer heartRate;
+    @Column(name = "blood_pressure")
     private String bloodPressure;
+
+    @Column(name = "heart_rate")
+    private Integer heartRate;
+
+    @Column(name = "blood_sugar")
+    private Float bloodSugar;
+
+    @Column(name = "blood_oxygen")
+    private Float bloodOxygen;
+
+    @Column(name = "steps")
+    private Integer steps;
+
+    @Column(name = "calories_burned")
     private Double caloriesBurned;
+
+    @Column(name = "sleep_duration")
     private Double sleepDuration;
 
-	@Column(name = "created_at")
-	private LocalDateTime createdAt;
+    @Column(name = "date")
+    private LocalDateTime date;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     // 無參構造函數
     public HealthMetrics() {
     }
 
     // 帶參構造函數
-    public HealthMetrics(User user, Integer heartRate, Integer steps, String bloodPressure, Double caloriesBurned, Double sleepDuration, LocalDateTime date) {
+    public HealthMetrics(User user, Integer heartRate, Integer steps, String bloodPressure, 
+                         Float bloodSugar, Float bloodOxygen, Double caloriesBurned, Double sleepDuration, LocalDateTime date) {
         this.user = user;
         this.heartRate = heartRate;
         this.steps = steps;
         this.bloodPressure = bloodPressure;
+        this.bloodSugar = bloodSugar;
+        this.bloodOxygen = bloodOxygen;
         this.caloriesBurned = caloriesBurned;
         this.sleepDuration = sleepDuration;
         this.date = date;
@@ -57,20 +77,12 @@ public class HealthMetrics {
         this.user = user;
     }
 
-    public LocalDateTime getDate() {
-        return date;
+    public String getBloodPressure() {
+        return bloodPressure;
     }
 
-    public void setDate(LocalDateTime date) {
-        this.date = date;
-    }
-
-    public Integer getSteps() {
-        return steps;
-    }
-
-    public void setSteps(Integer steps) {
-        this.steps = steps;
+    public void setBloodPressure(String bloodPressure) {
+        this.bloodPressure = bloodPressure;
     }
 
     public Integer getHeartRate() {
@@ -81,12 +93,28 @@ public class HealthMetrics {
         this.heartRate = heartRate;
     }
 
-    public String getBloodPressure() {
-        return bloodPressure;
+    public Float getBloodSugar() {
+        return bloodSugar;
     }
 
-    public void setBloodPressure(String bloodPressure) {
-        this.bloodPressure = bloodPressure;
+    public void setBloodSugar(Float bloodSugar) {
+        this.bloodSugar = bloodSugar;
+    }
+
+    public Float getBloodOxygen() {
+        return bloodOxygen;
+    }
+
+    public void setBloodOxygen(Float bloodOxygen) {
+        this.bloodOxygen = bloodOxygen;
+    }
+
+    public Integer getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Integer steps) {
+        this.steps = steps;
     }
 
     public Double getCaloriesBurned() {
@@ -103,6 +131,14 @@ public class HealthMetrics {
 
     public void setSleepDuration(Double sleepDuration) {
         this.sleepDuration = sleepDuration;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 
     public LocalDateTime getCreatedAt() {
