@@ -19,7 +19,7 @@ public class UserService {
     private UserRepository userRepository;
 
     // 上傳圖片
-    public void saveImagePath(Long id, String imagePath) {
+    public void saveImagePath(String id, String imagePath) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setImagelink(imagePath); // 假設你的User實體有一個setImageLink的方法
@@ -27,7 +27,7 @@ public class UserService {
     }
 
     // 根據用戶名獲取用戶資料
-    public User getUserById(Long id) {
+    public User getUserById(String id) {
         return userRepository.findById(id).orElse(null);
     }
 

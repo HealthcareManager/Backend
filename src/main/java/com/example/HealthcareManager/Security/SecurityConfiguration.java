@@ -1,5 +1,8 @@
 package com.example.HealthcareManager.Security;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,62 +23,29 @@ import org.springframework.web.cors.CorsConfiguration;
 @Configuration
 public class SecurityConfiguration {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final UserDetailsService customUserDetailsService;
+    private final AuthenticationProvider authenticationProvider;
 
     @Autowired
-    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter, 
-                                 UserDetailsService customUserDetailsService) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.customUserDetailsService = customUserDetailsService;
+    public SecurityConfiguration(AuthenticationProvider authenticationProvider) {
+        this.authenticationProvider = authenticationProvider;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors
-                .configurationSource(request -> {
-                    CorsConfiguration config = new CorsConfiguration();
-                    config.applyPermitDefaultValues();
-                    // 根據需求自定義CORS配置
-                    return config;
-                })
-            )
-            .csrf(csrf -> csrf.disable()) // 禁用 CSRF，根據需要決定是否啟用
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/img/**", "/news/**").permitAll()
-                .requestMatchers("/api/manager/**").hasRole("MANAGER")
-                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers("/api/user/**").hasRole("USER")
-                .anyRequest().authenticated()
-            )
-            .oauth2Login(oauth2Login -> oauth2Login
-                .userInfoEndpoint(userInfo -> userInfo
-                    .userService((OAuth2UserService<OAuth2UserRequest, OAuth2User>) customUserDetailsService)
-                )
-                .successHandler((request, response, authentication) -> {
-                    // OAuth2 認證成功處理
-                })
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 使用無狀態的 Session 管理
-            )
-            .authenticationProvider(authenticationProvider()) // 設置自定義的 AuthenticationProvider
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // 添加 JWT 過濾器
+        http.cors(cors -> cors.configurationSource(request -> {
+            CorsConfiguration corsConfig = new CorsConfiguration();
+            corsConfig.setAllowedOriginPatterns(Collections.singletonList(""));
+            corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            corsConfig.setAllowedHeaders(List.of(""));
+            corsConfig.setAllowCredentials(false);
+            return corsConfig;
+        }))
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(authz -> authz
+            .anyRequest().permitAll() // 允许所有请求
+        )
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }
