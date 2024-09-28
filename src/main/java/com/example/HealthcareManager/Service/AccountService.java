@@ -177,8 +177,11 @@ public class AccountService {
 
 
     public ResponseEntity<String> registerUser(User user) {
-        if (accountRepository.findByEmail(user.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("該電子郵件已被使用!");
+
+        if (accountRepository.findByUsername(user.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body("使用者名稱已被使用!");
+        } else if(accountRepository.findByEmail(user.getEmail()).isPresent()){
+            return ResponseEntity.badRequest().body("Email名稱已被使用!");
         }
 
         try {
@@ -206,7 +209,6 @@ public class AccountService {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Collections.singletonMap("message", "帳戶已被鎖定，請聯繫管理員"));
         }
-
         Optional<User> optionalUser = accountRepository.findByUsername(user.getUsername());
         if (optionalUser.isPresent()) {
             User existingUser = optionalUser.get();
