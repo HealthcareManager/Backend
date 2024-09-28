@@ -38,9 +38,6 @@ public class HealthMetrics {
     @Column(name = "date")
     private LocalDateTime date;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
     // 無參構造函數
     public HealthMetrics() {
     }
@@ -57,7 +54,6 @@ public class HealthMetrics {
         this.caloriesBurned = caloriesBurned;
         this.sleepDuration = sleepDuration;
         this.date = date;
-        this.createdAt = LocalDateTime.now();
     }
 
     // Getters 和 Setters
@@ -139,13 +135,5 @@ public class HealthMetrics {
 
     public void setDate(LocalDateTime date) {
         this.date = date;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }
