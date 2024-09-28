@@ -1,74 +1,139 @@
 package com.example.HealthcareManager.Model;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "health_metrics")
 public class HealthMetrics {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	@ManyToOne
-	@JoinColumn(name = "user_id", nullable = false)
-	private User user;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-	@Column(name = "heart_rate")
-	private Integer heartRate;
+    @Column(name = "blood_pressure")
+    private String bloodPressure;
 
-	@Column(name = "blood_pressure")
-	private String bloodPressure;
+    @Column(name = "heart_rate")
+    private Integer heartRate;
 
-	@Column(name = "created_at")
-	private LocalDateTime createdAt;
+    @Column(name = "blood_sugar")
+    private Float bloodSugar;
 
-	public Long getId() {
-		return id;
-	}
+    @Column(name = "blood_oxygen")
+    private Float bloodOxygen;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    @Column(name = "steps")
+    private Integer steps;
 
-	public User getUser() {
-		return user;
-	}
+    @Column(name = "calories_burned")
+    private Double caloriesBurned;
 
-	public void setUser(User user) {
-		this.user = user;
-	}
+    @Column(name = "sleep_duration")
+    private Double sleepDuration;
 
-	public Integer getHeartRate() {
-		return heartRate;
-	}
+    @Column(name = "date")
+    private LocalDateTime date;
 
-	public void setHeartRate(Integer heartRate) {
-		this.heartRate = heartRate;
-	}
+    // 無參構造函數
+    public HealthMetrics() {
+    }
 
-	public String getBloodPressure() {
-		return bloodPressure;
-	}
+    // 帶參構造函數
+    public HealthMetrics(User user, Integer heartRate, Integer steps, String bloodPressure, 
+                         Float bloodSugar, Float bloodOxygen, Double caloriesBurned, Double sleepDuration, LocalDateTime date) {
+        this.user = user;
+        this.heartRate = heartRate;
+        this.steps = steps;
+        this.bloodPressure = bloodPressure;
+        this.bloodSugar = bloodSugar;
+        this.bloodOxygen = bloodOxygen;
+        this.caloriesBurned = caloriesBurned;
+        this.sleepDuration = sleepDuration;
+        this.date = date;
+    }
 
-	public void setBloodPressure(String bloodPressure) {
-		this.bloodPressure = bloodPressure;
-	}
+    // Getters 和 Setters
+    public Long getId() {
+        return id;
+    }
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
+    public User getUser() {
+        return user;
+    }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public String getBloodPressure() {
+        return bloodPressure;
+    }
+
+    public void setBloodPressure(String bloodPressure) {
+        this.bloodPressure = bloodPressure;
+    }
+
+    public Integer getHeartRate() {
+        return heartRate;
+    }
+
+    public void setHeartRate(Integer heartRate) {
+        this.heartRate = heartRate;
+    }
+
+    public Float getBloodSugar() {
+        return bloodSugar;
+    }
+
+    public void setBloodSugar(Float bloodSugar) {
+        this.bloodSugar = bloodSugar;
+    }
+
+    public Float getBloodOxygen() {
+        return bloodOxygen;
+    }
+
+    public void setBloodOxygen(Float bloodOxygen) {
+        this.bloodOxygen = bloodOxygen;
+    }
+
+    public Integer getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Integer steps) {
+        this.steps = steps;
+    }
+
+    public Double getCaloriesBurned() {
+        return caloriesBurned;
+    }
+
+    public void setCaloriesBurned(Double caloriesBurned) {
+        this.caloriesBurned = caloriesBurned;
+    }
+
+    public Double getSleepDuration() {
+        return sleepDuration;
+    }
+
+    public void setSleepDuration(Double sleepDuration) {
+        this.sleepDuration = sleepDuration;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
 }
