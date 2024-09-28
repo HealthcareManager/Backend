@@ -27,7 +27,7 @@ public class HealthMetricsController {
     }
 
     @PostMapping("/api/generate-fake-data/{userId}")
-    public ResponseEntity<String> generateFakeData(@PathVariable Long userId) {
+    public ResponseEntity<String> generateFakeData(@PathVariable String userId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
