@@ -116,24 +116,18 @@ public class AuthController {
         //     responseBody.put("message", "缺少或无效的 Authorization");
         //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         // }
-
         // // 提取 JWT
         // String jwt = authHeader.substring(7);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("authentication is " + authentication);
         // 从 JWT 中获取用户名并查询用户信息
         // if (authentication == null || !authentication.isAuthenticated()) {
         //     Map<String, String> responseBody = new HashMap<>();
         //     responseBody.put("message", "无效的 JWT");
         //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         // }
-
-//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-//        System.out.println("userDetails is " + userDetails);
-        String userId = jwtService.extractId(authHeader.replace("Bearer ", "").trim()); // 获取用户 ID
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String userId = userDetails.getUsername(); // 获取用户 ID
         Optional<User> optionalUser = accountRepository.findById(userId); 
-    
-
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             Map<String, String> responseBody = new HashMap<>();
@@ -155,5 +149,10 @@ public class AuthController {
     }
     
     
+
+    // @PostMapping("/test")
+    // public String test() {
+    //     return "test";
+    // }
 
 }
