@@ -38,14 +38,12 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private JwtService jwtService;
-
-    @Autowired
     private UserRepository userRepository;
 
     // 更新用戶名稱
     @PutMapping("update-username/{id}")
-    public ResponseEntity<String> updateUsername(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<String> updateUsername(@PathVariable String id,
+            @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
 
         String newUsername = requestBody.get("username");
 
@@ -64,7 +62,8 @@ public class UserController {
 
     // 更新密碼
     @PutMapping("update-password/{id}")
-    public ResponseEntity<String> updatePassword(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<String> updatePassword(@PathVariable String id,
+            @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
 
         String newPassword = requestBody.get("newPassword");
         boolean update = userService.updatePassword(id, newPassword);
@@ -77,7 +76,7 @@ public class UserController {
 
     // 更新性別
     @PutMapping("update-gender/{id}")
-    public ResponseEntity<String> updateGender(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<String> updateGender(@PathVariable String id, @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
 
         String newGender = requestBody.get("gender");
         boolean update = userService.updateGender(id, newGender);
@@ -90,7 +89,7 @@ public class UserController {
 
     // 更新身高
     @PutMapping("update-height/{id}")
-    public ResponseEntity<String> updateHeight(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<String> updateHeight(@PathVariable String id, @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
 
         Double newHeight = Double.parseDouble(requestBody.get("height"));
         boolean update = userService.updateHeight(id, newHeight);
@@ -103,7 +102,7 @@ public class UserController {
 
     // 更新體重
     @PutMapping("update-weight/{id}")
-    public ResponseEntity<String> updateWeight(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<String> updateWeight(@PathVariable String id, @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
 
         Double newWeight = Double.parseDouble(requestBody.get("weight"));
         boolean update = userService.updateWeight(id, newWeight);
@@ -118,21 +117,6 @@ public class UserController {
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
             @PathVariable(value = "id") String id,
             @RequestHeader("Authorization") String authorizationHeader) {
-
-        // 檢查 Authorization 標頭是否以 "Bearer " 開頭
-        if (!authorizationHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Authorization header 必須以 'Bearer ' 開頭");
-        }
-
-        // 保留 "Bearer " 前綴，不去掉
-        String token = authorizationHeader;
-
-        // 解析 JWT，假設 jwtService 支持解析帶有 Bearer 前綴的 token
-        String userId = jwtService.extractId(token);
-
-        if (!userId.equals(id)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("用戶ID不匹配");
-        }
 
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("請選擇一個檔案來上傳。");
