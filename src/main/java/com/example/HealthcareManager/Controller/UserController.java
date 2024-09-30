@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.HealthcareManager.Model.User;
+import com.example.HealthcareManager.Repository.UserRepository;
+import com.example.HealthcareManager.Security.JwtAuthenticationFilter;
+import com.example.HealthcareManager.Security.JwtService;
 import com.example.HealthcareManager.Service.UserService;
 
 import java.io.File;
@@ -15,6 +18,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +26,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("api/auth")
@@ -30,9 +37,103 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    // 更新用戶名稱
+    @PutMapping("update-username/{id}")
+    public ResponseEntity<String> updateUsername(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+
+        String newUsername = requestBody.get("username");
+
+        // 檢查新的用戶名是否已存在
+        if (userRepository.findByUsername(newUsername).isPresent()) {
+            return ResponseEntity.badRequest().body("該用戶名已被使用!");
+        }
+
+        boolean update = userService.updateUsername(id, newUsername);
+        if (update) {
+            return ResponseEntity.ok("用戶更新成功");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("用戶更新失敗");
+        }
+    }
+
+    // 更新密碼
+    @PutMapping("update-password/{id}")
+    public ResponseEntity<String> updatePassword(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+
+        String newPassword = requestBody.get("newPassword");
+        boolean update = userService.updatePassword(id, newPassword);
+        if (update) {
+            return ResponseEntity.ok("用戶密碼更新成功");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("用戶密碼更新失敗");
+        }
+    }
+
+    // 更新性別
+    @PutMapping("update-gender/{id}")
+    public ResponseEntity<String> updateGender(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+
+        String newGender = requestBody.get("gender");
+        boolean update = userService.updateGender(id, newGender);
+        if (update) {
+            return ResponseEntity.ok("性別更新成功");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("性別更新失敗");
+        }
+    }
+
+    // 更新身高
+    @PutMapping("update-height/{id}")
+    public ResponseEntity<String> updateHeight(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+
+        Double newHeight = Double.parseDouble(requestBody.get("height"));
+        boolean update = userService.updateHeight(id, newHeight);
+        if (update) {
+            return ResponseEntity.ok("身高更新成功");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("身高更新失敗");
+        }
+    }
+
+    // 更新體重
+    @PutMapping("update-weight/{id}")
+    public ResponseEntity<String> updateWeight(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+
+        Double newWeight = Double.parseDouble(requestBody.get("weight"));
+        boolean update = userService.updateWeight(id, newWeight);
+        if (update) {
+            return ResponseEntity.ok("體重更新成功");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("體重更新失敗");
+        }
+    }
+
     @PostMapping("/upload-image/{id}")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
-            @PathVariable(value = "id") String id) {
+            @PathVariable(value = "id") String id,
+            @RequestHeader("Authorization") String authorizationHeader) {
+
+        // 檢查 Authorization 標頭是否以 "Bearer " 開頭
+        if (!authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Authorization header 必須以 'Bearer ' 開頭");
+        }
+
+        // 保留 "Bearer " 前綴，不去掉
+        String token = authorizationHeader;
+
+        // 解析 JWT，假設 jwtService 支持解析帶有 Bearer 前綴的 token
+        String userId = jwtService.extractId(token);
+
+        if (!userId.equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("用戶ID不匹配");
+        }
+
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("請選擇一個檔案來上傳。");
         }
