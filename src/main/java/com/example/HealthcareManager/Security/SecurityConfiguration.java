@@ -24,28 +24,32 @@ import org.springframework.web.cors.CorsConfiguration;
 public class SecurityConfiguration {
 
     private final AuthenticationProvider authenticationProvider;
+    private final JwtAuthenticationFilter jwtAuthFilter;
 
     @Autowired
-    public SecurityConfiguration(AuthenticationProvider authenticationProvider) {
+    public SecurityConfiguration(AuthenticationProvider authenticationProvider, JwtAuthenticationFilter jwtAuthFilter) {
         this.authenticationProvider = authenticationProvider;
+        this.jwtAuthFilter = jwtAuthFilter;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> cors.configurationSource(request -> {
-            CorsConfiguration corsConfig = new CorsConfiguration();
-            corsConfig.setAllowedOriginPatterns(Collections.singletonList(""));
-            corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-            corsConfig.setAllowedHeaders(List.of(""));
-            corsConfig.setAllowCredentials(false);
-            return corsConfig;
-        }))
-        .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(authz -> authz
-            .anyRequest().permitAll() // 允许所有请求
-        )
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        return http.build();
-    }
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		http.cors(cors -> cors.configurationSource(request -> {
+			CorsConfiguration corsConfig = new CorsConfiguration();
+			corsConfig.setAllowedOriginPatterns(Collections.singletonList("*"));
+			corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+			corsConfig.setAllowedHeaders(List.of("*"));
+			corsConfig.setAllowCredentials(false);
+			return corsConfig;
+		}))
+		.csrf(csrf -> csrf.disable())
+				.authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/**").permitAll()
+                        .anyRequest().authenticated())
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.authenticationProvider(authenticationProvider)
+				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+		return http.build();
+	}
 }
+
