@@ -11,7 +11,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -42,11 +41,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
-        final String userEmail;
+        final String userId;
 
         String requestURI = request.getRequestURI();
         System.out.println(requestURI);
-        if (requestURI.equals("/api/auth/login") || requestURI.equals("/api/auth/register") || requestURI.equals("/api/auth/google-login")) {
+        if (requestURI.equals("/api/auth/login") || requestURI.equals("/api/auth/register") || requestURI.equals("/api/auth/google-login") || requestURI.equals("/api/auth/facebook-login") || requestURI.equals("/api/auth/line-callback")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -65,11 +64,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             jwt = authHeader.substring(7);
-            userEmail = jwtService.extractId(jwt);
+            userId = jwtService.extractId(jwt);
 
-            if (userEmail == null) {
+            if (userId == null) {
                 logger.warn("Failed to extract username from JWT token");
-                createErrorResponse(response, HttpStatus.UNAUTHORIZED, "無效的 JWT：無法解析用戶名");
+                createErrorResponse(response, HttpStatus.UNAUTHORIZED, "無效的 JWT：無法解析Id");
                 return;
             }
 
@@ -79,9 +78,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userId);
             if (userDetails == null) {
-                logger.error("UserDetailsService failed to load user by username: {}", userEmail);
+                logger.error("UserDetailsService failed to load user by Id: {}", userId);
                 createErrorResponse(response, HttpStatus.UNAUTHORIZED, "無效的 JWT：用戶不存在");
                 return;
             }
