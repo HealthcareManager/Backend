@@ -228,8 +228,8 @@ return toBase64String(HmacUtils.getInitializedMac(HmacAlgorithms.HMAC_SHA_256, k
     public Map<String, Object> sendPaymentRequest(Map<String, Object> result) {
         ObjectMapper mapper = new ObjectMapper();
         String nonce = UUID.randomUUID().toString();
-        String ChannelId = "1234"; // 測試用的 Channel ID
-        String ChannelSecret = "5678"; // 測試用的 Channel Secret
+        String ChannelId = "2006384711"; // 測試用的 Channel ID
+        String ChannelSecret = "5b754d3c661a31399d318c968d4e5081"; // 測試用的 Channel Secret
         String requestUri = "/v3/payments/request";
         String deviceType = "PC";
 
