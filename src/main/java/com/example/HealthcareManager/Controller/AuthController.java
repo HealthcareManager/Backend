@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -90,15 +91,37 @@ public class AuthController {
         
     }
     
-    @GetMapping("/line-callback")
-    public String lineCallback(@RequestParam("code") String code) {
-        // 使用认证码交换访问令牌
-        Optional<User> accessToken = accountService.getLineAccessToken(code);
-        if (accessToken != null) {
-            // 使用访问令牌获取用户信息
-            return "Sucsess";
+    @PostMapping("/line-callback")
+    public ResponseEntity<?> lineCallback(@RequestBody String code) {
+    	JSONObject jsonObject = new JSONObject(code);
+        String authorizationCode = jsonObject.getString("code");
+        // 使用認證碼交換訪問令牌
+    	System.out.println("code at line callback is " + authorizationCode);
+        Optional<Map<String, Object>> userOptional = accountService.getLineAccessToken(authorizationCode);
+
+        if (userOptional.isPresent()) {
+            Map<String, Object> userData = userOptional.get();
+
+//            // 創建 User 對象，並從 Map 中提取數據
+//            User user = new User();
+//            user.setId((String) userData.get("id"));
+//            user.setUsername((String) userData.get("username"));
+//            user.setEmail((String) userData.get("email"));
+//            // 設置其他字段...
+//
+//            // 創建返回的 JSON 對象，包含用戶信息
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("status", "success");
+//            response.put("user", user);
+
+            return ResponseEntity.ok(userOptional);
         }
-        return "Error obtaining access token";
+
+        // 返回錯誤信息
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("status", "error");
+        errorResponse.put("message", "Error obtaining access token");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
     
     @PostMapping("/login")
@@ -110,7 +133,21 @@ public class AuthController {
     @PostMapping("/validate-token")
     public ResponseEntity<Map<String, String>> getProtectedData(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        // // 检查 Authorization 头是否存在
+        // if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        //     Map<String, String> responseBody = new HashMap<>();
+        //     responseBody.put("message", "缺少或无效的 Authorization");
+        //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+        // }
+        // // 提取 JWT
+        // String jwt = authHeader.substring(7);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // 从 JWT 中获取用户名并查询用户信息
+        // if (authentication == null || !authentication.isAuthenticated()) {
+        //     Map<String, String> responseBody = new HashMap<>();
+        //     responseBody.put("message", "无效的 JWT");
+        //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+        // }
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String userId = userDetails.getUsername(); // 获取用户 ID
         Optional<User> optionalUser = accountRepository.findById(userId); 
@@ -133,5 +170,12 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
         }
     }
+    
+    
+
+    // @PostMapping("/test")
+    // public String test() {
+    //     return "test";
+    // }
 
 }

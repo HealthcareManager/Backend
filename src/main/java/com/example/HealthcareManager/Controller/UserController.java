@@ -59,7 +59,7 @@ public class UserController {
             Files.write(filePath, file.getBytes());
 
             // 更新為正確的基本 URL
-            String baseUrl = "http://10.0.2.2:8080/"; // 確保這裡的端口和地址正確
+            String baseUrl = "http://192.168.50.38:8080/HealthcareManager/"; // 確保這裡的端口和地址正確
             String relativeImagePath = "images/" + fileName;
             String fullImageUrl = baseUrl + relativeImagePath;
 
