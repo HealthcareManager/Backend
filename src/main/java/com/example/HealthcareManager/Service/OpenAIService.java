@@ -12,20 +12,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.example.HealthcareManager.DTO.ExerciseLogDTO;
 import com.example.HealthcareManager.DTO.HealthDataDTO;
 import com.example.HealthcareManager.DTO.UserHabitDTO;
+import com.example.HealthcareManager.Repository.ExerciseLogDTORepository;
 import com.example.HealthcareManager.Repository.HealthDataDTORepository;
 import com.example.HealthcareManager.Repository.UserHabitDTORepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.jsonwebtoken.io.IOException;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Value;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @Service
 public class OpenAIService {
@@ -37,20 +38,27 @@ public class OpenAIService {
     private HealthDataDTORepository healthDataDTORepository;
     @Autowired
     private UserHabitDTORepository userHabitDTORepository;
+    @Autowired
+    private ExerciseLogDTORepository exerciseLogDTORepository;
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> handleGeneralQuestions(String userId, String question) {
         Map<String, Object> responseJson = new HashMap<>();
         try {
+            // 設置 ObjectMapper 忽略 null 值
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // 忽略所有 null 值
+
             // 获取最近10条健康数据
             Pageable pageable = PageRequest.of(0, 10);
             List<HealthDataDTO> healthDataList = healthDataDTORepository.findByUserId(userId, pageable);
-
+            Pageable excerisepageable = PageRequest.of(0, 2);
+            List<ExerciseLogDTO> exerciseDataList = exerciseLogDTORepository.findExerciseLogDTOByUserId(userId,
+                    excerisepageable);
             // 获取用户习惯
             UserHabitDTO userHabit = userHabitDTORepository.findUserHabitDTObyUserId(userId);
 
             // 使用 ObjectMapper 来构建 JSON 字符串
-            ObjectMapper mapper = new ObjectMapper();
             ArrayNode healthDataArray = mapper.createArrayNode();
             for (HealthDataDTO healthData : healthDataList) {
                 ObjectNode healthDataNode = mapper.createObjectNode();
@@ -59,8 +67,19 @@ public class OpenAIService {
                 healthDataNode.put("diastolic_pressure", Integer.parseInt(healthData.getBloodPressure().split("/")[1]));
                 healthDataNode.put("blood_sugar", healthData.getBloodSugar());
                 healthDataNode.put("blood_oxygen", healthData.getBloodOxygen());
-                healthDataNode.put("date", healthData.getDate().toString());
+                healthDataNode.put("date", healthData.getDate() != null ? healthData.getDate().toString() : null); // 使用 null 判斷
                 healthDataArray.add(healthDataNode);
+            }
+
+            ArrayNode exerciseDataArray = mapper.createArrayNode();
+            for (ExerciseLogDTO exerciseLog : exerciseDataList) {
+                ObjectNode exerciseLogNode = mapper.createObjectNode();
+                exerciseLogNode.put("exerciseType", exerciseLog.getExerciseType());
+                exerciseLogNode.put("duration", exerciseLog.getDuration());
+                exerciseLogNode.put("caloriesBurned", exerciseLog.getCaloriesBurned());
+                exerciseLogNode.put("kilometers", exerciseLog.getKilometers());
+                exerciseLogNode.put("createdAt", exerciseLog.getCreatedAt() != null ? exerciseLog.getCreatedAt().toString() : null);
+                exerciseDataArray.add(exerciseLogNode);
             }
 
             // 构建请求的 JSON
@@ -69,7 +88,8 @@ public class OpenAIService {
             ArrayNode messagesNode = mapper.createArrayNode();
             ObjectNode systemMessage = mapper.createObjectNode();
             systemMessage.put("role", "system");
-            systemMessage.put("content", "你是一位健康管理助理，你的任務是根據用戶的健康數據提供健康建議。請使用繁體中文回應，只回答健康相關問題。如果用戶問非健康問題，請回應‘我無法回答你的問題’。");
+            systemMessage.put("content",
+                    "你是一位健康管理助理，你的任務是根據用戶的健康數據提供健康建議。請使用繁體中文回應，只回答健康相關問題。如果用戶問非健康問題，請回應‘我無法回答你的問題’。");
             messagesNode.add(systemMessage);
 
             ObjectNode userMessage = mapper.createObjectNode();
@@ -81,6 +101,7 @@ public class OpenAIService {
                     ", 我的習慣是：酒精: " + userHabit.isAlcohol() +
                     ", 香煙: " + userHabit.isCigarette() +
                     ", 檳榔: " + userHabit.isAreca() +
+                    "。我最近的運動數據是：" + exerciseDataArray.toString() +
                     "。我的問題是：" + question +
                     "。請幫我制定一個有助於我身體健康的計畫，並給我一些鼓勵的話。請給我一些建議，關於是否需要就醫。");
             messagesNode.add(userMessage);
@@ -88,7 +109,8 @@ public class OpenAIService {
             requestBodyNode.set("messages", messagesNode);
 
             String requestBody = requestBodyNode.toString();
-            System.out.println("-------------------------------" + requestBody + "--------------------------------------------------");
+            System.out.println("-------------------------------" + requestBody
+                    + "--------------------------------------------------");
 
             // 發送 HTTP 請求
             HttpClient client = HttpClient.newHttpClient();
@@ -130,7 +152,3 @@ public class OpenAIService {
         return responseJson;
     }
 }
-
-
-
-
