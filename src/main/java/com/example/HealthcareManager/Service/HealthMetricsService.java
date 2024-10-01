@@ -26,7 +26,7 @@ public class HealthMetricsService {
     }
 
     // 每隔 60 秒自動為所有用戶生成假數據
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 86400000)
     public void generateFakeDataForAllUsers() {
         List<User> allUsers = userRepository.findAll();  // 查找所有用戶
         for (User user : allUsers) {
@@ -40,12 +40,9 @@ public class HealthMetricsService {
         HealthMetrics metrics = new HealthMetrics(
             user,  // 傳遞 User 對象
             random.nextInt(40) + 60,  // 心率 (60 到 100 之間)
-            random.nextInt(10000) + 1000,  // 步數 (1000 到 11000 之間)
             random.nextInt(40) + 90 + "/" + (random.nextInt(20) + 60),  // 血壓 (90/60 到 130/80 之間)
             random.nextFloat() * 50 + 70,  // 血糖 (70 到 120 之間)
             random.nextFloat() * 5 + 95,  // 血氧 (95% 到 100%)
-            random.nextDouble() * 500 + 100,  // 卡路里消耗 (100 到 600 之間)
-            random.nextDouble() * 8,  // 睡眠時間 (0 到 8 小時)
             LocalDateTime.now()  // 當前時間
         );
         healthMetricsRepository.save(metrics);

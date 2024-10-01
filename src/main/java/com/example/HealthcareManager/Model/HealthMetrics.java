@@ -26,34 +26,22 @@ public class HealthMetrics {
 
     @Column(name = "blood_oxygen")
     private Float bloodOxygen; // 使用 Float 以保持一致性
-
-    @Column(name = "calories_burned")
-    private Double caloriesBurned;
     
     @Column(name = "date")
     private LocalDateTime date;
-
-    @Column(name = "sleep_duration")
-    private Double sleepDuration;
-
-    @Column(name = "steps")
-    private Integer steps;
 
     // 無參構造函數
     public HealthMetrics() {
     }
 
     // 帶參構造函數
-    public HealthMetrics(User user, Integer heartRate, Integer steps, String bloodPressure, 
-                         Float bloodSugar, Float bloodOxygen, Double caloriesBurned, Double sleepDuration, LocalDateTime date) {
+    public HealthMetrics(User user, Integer heartRate, String bloodPressure, 
+                         Float bloodSugar, Float bloodOxygen, LocalDateTime date) {
         this.user = user;
         this.heartRate = heartRate;
-        this.steps = steps;
         this.bloodPressure = bloodPressure;
         this.bloodSugar = bloodSugar;
         this.bloodOxygen = bloodOxygen;
-        this.caloriesBurned = caloriesBurned;
-        this.sleepDuration = sleepDuration;
         this.date = date;
     }
 
@@ -88,7 +76,7 @@ public class HealthMetrics {
     public void setBloodPressure(String bloodPressure) {
         this.bloodPressure = bloodPressure;
     }
-    
+
     public Float getBloodSugar() {
         return bloodSugar;
     }
@@ -105,30 +93,6 @@ public class HealthMetrics {
         this.bloodOxygen = bloodOxygen;
     }
 
-    public Integer getSteps() {
-        return steps;
-    }
-
-    public void setSteps(Integer steps) {
-        this.steps = steps;
-    }
-
-    public Double getCaloriesBurned() {
-        return caloriesBurned;
-    }
-
-    public void setCaloriesBurned(Double caloriesBurned) {
-        this.caloriesBurned = caloriesBurned;
-    }
-
-    public Double getSleepDuration() {
-        return sleepDuration;
-    }
-
-    public void setSleepDuration(Double sleepDuration) {
-        this.sleepDuration = sleepDuration;
-    }
-
     public LocalDateTime getDate() {
         return date;
     }
@@ -136,6 +100,8 @@ public class HealthMetrics {
     public void setDate(LocalDateTime date) {
         this.date = date;
     }
+
+    //getter setter
 }
 
 
