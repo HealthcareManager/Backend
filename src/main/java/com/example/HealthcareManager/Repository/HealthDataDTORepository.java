@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface HealthDataDTORepository extends JpaRepository<HealthMetrics, Long> {
 
-    @Query("SELECT new com.example.HealthcareManager.DTO.HealthDataDTO(u.id, h.heartRate, h.bloodPressure, h.bloodSugar, h.bloodOxygen, h.date, h.caloriesBurned, h.sleepDuration, h.steps) " +
+    @Query("SELECT new com.example.HealthcareManager.DTO.HealthDataDTO(u.id, h.heartRate, h.bloodPressure, h.bloodSugar, h.bloodOxygen, h.date) " +
            "FROM User u JOIN HealthMetrics h ON u.id = h.user.id " +
            "WHERE u.id = :Id " +
            "ORDER BY h.date DESC")
