@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -40,31 +41,10 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    // 更新用戶名稱
-    @PutMapping("update-username/{id}")
-    public ResponseEntity<String> updateUsername(@PathVariable String id,
-            @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
-
-        String newUsername = requestBody.get("username");
-
-        // 檢查新的用戶名是否已存在
-        if (userRepository.findByUsername(newUsername).isPresent()) {
-            return ResponseEntity.badRequest().body("該用戶名已被使用!");
-        }
-
-        boolean update = userService.updateUsername(id, newUsername);
-        if (update) {
-            return ResponseEntity.ok("用戶更新成功");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("用戶更新失敗");
-        }
-    }
-
     // 更新密碼
     @PutMapping("update-password/{id}")
     public ResponseEntity<String> updatePassword(@PathVariable String id,
-            @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
-
+            @RequestBody Map<String, String> requestBody) {
         String newPassword = requestBody.get("newPassword");
         boolean update = userService.updatePassword(id, newPassword);
         if (update) {
@@ -74,43 +54,64 @@ public class UserController {
         }
     }
 
-    // 更新性別
-    @PutMapping("update-gender/{id}")
-    public ResponseEntity<String> updateGender(@PathVariable String id, @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
-
-        String newGender = requestBody.get("gender");
-        boolean update = userService.updateGender(id, newGender);
-        if (update) {
-            return ResponseEntity.ok("性別更新成功");
+    // 獲取用戶密碼
+    @GetMapping("/password/{id}")
+    public ResponseEntity<String> getPassword(@PathVariable String id) {
+        String password = userService.getPasswordById(id);
+        if (password != null) {
+            return ResponseEntity.ok(password); // 返回密碼
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("性別更新失敗");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("用戶不存在");
         }
     }
 
-    // 更新身高
-    @PutMapping("update-height/{id}")
-    public ResponseEntity<String> updateHeight(@PathVariable String id, @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
+    @PutMapping("update-user-data/{id}")
+    public ResponseEntity<String> updateUserData(@PathVariable String id,
+            @RequestBody Map<String, Object> requestBody) {
 
-        Double newHeight = Double.parseDouble(requestBody.get("height"));
-        boolean update = userService.updateHeight(id, newHeight);
-        if (update) {
-            return ResponseEntity.ok("身高更新成功");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("身高更新失敗");
+                System.out.println("123");
+        // 檢查是否提供了用戶名並進行更新
+        if (requestBody.containsKey("username")) {
+            String newUsername = (String) requestBody.get("username");
+            if (userRepository.findByUsername(newUsername).isPresent()) {
+                System.out.println("該用戶名已被使用 " + newUsername);
+                return ResponseEntity.badRequest().body("該用戶名已被使用!");
+            }
+            boolean updateUsername = userService.updateUsername(id, newUsername);
+            if (!updateUsername) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("用戶名更新失敗");
+            }
         }
-    }
 
-    // 更新體重
-    @PutMapping("update-weight/{id}")
-    public ResponseEntity<String> updateWeight(@PathVariable String id, @RequestBody Map<String, String> requestBody, @RequestHeader("Authorization") String authorizationHeader) {
-
-        Double newWeight = Double.parseDouble(requestBody.get("weight"));
-        boolean update = userService.updateWeight(id, newWeight);
-        if (update) {
-            return ResponseEntity.ok("體重更新成功");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("體重更新失敗");
+        // 檢查是否提供了性別並進行更新
+        if (requestBody.containsKey("gender")) {
+            String newGender = (String) requestBody.get("gender");
+            boolean updateGender = userService.updateGender(id, newGender);
+            if (!updateGender) {
+                System.out.println("該用戶名已被使用 " + newGender);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("性別更新失敗");
+            }
         }
+
+        // 檢查是否提供了身高並進行更新
+        if (requestBody.containsKey("height")) {
+            Double newHeight = Double.parseDouble(requestBody.get("height").toString());
+            boolean updateHeight = userService.updateHeight(id, newHeight);
+            if (!updateHeight) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("身高更新失敗");
+            }
+        }
+
+        // 檢查是否提供了體重並進行更新
+        if (requestBody.containsKey("weight")) {
+            Double newWeight = Double.parseDouble(requestBody.get("weight").toString());
+            boolean updateWeight = userService.updateWeight(id, newWeight);
+            if (!updateWeight) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("體重更新失敗");
+            }
+        }
+
+        return ResponseEntity.ok("用戶資料更新成功");
     }
 
     @PostMapping("/upload-image/{id}")

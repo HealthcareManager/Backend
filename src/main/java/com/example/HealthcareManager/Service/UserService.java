@@ -2,6 +2,7 @@ package com.example.HealthcareManager.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 import com.example.HealthcareManager.Model.User;
@@ -30,11 +31,11 @@ public class UserService {
         return userRepository.findById(id).orElse(null);
     }
 
-    // 用戶名稱
+    // 姓名
     public boolean updateUsername(String id, String newUsername) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
             user.setUsername(newUsername);
             userRepository.save(user);
             return true;
@@ -44,34 +45,32 @@ public class UserService {
 
     // 密碼
     public boolean updatePassword(String id, String newPassword) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            user.setPassword(newPassword);
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setPassword(newPassword); // 這裡應該進行加密
             userRepository.save(user);
             return true;
         }
         return false;
     }
 
-     // 性別
-     public boolean updateGender(String id, String newGender) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
+    // 通過用戶 ID 獲取密碼
+    public String getPasswordById(String id) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            return user.getPassword(); // 返回存儲的密碼
+        }
+        return null; // 如果用戶不存在
+    }
+
+    // 性別
+    public boolean updateGender(String id, String newGender) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
             user.setGender(newGender);
-            userRepository.save(user);
-            return true;
-        }
-        return false;
-    }
-
-    // 體重
-    public boolean updateWeight(String id, Double newWeight) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            user.setWeight(newWeight);
             userRepository.save(user);
             return true;
         }
@@ -80,13 +79,66 @@ public class UserService {
 
     // 身高
     public boolean updateHeight(String id, Double newHeight) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
             user.setHeight(newHeight);
             userRepository.save(user);
             return true;
         }
         return false;
+    }
+
+    // 體重
+    public boolean updateWeight(String id, Double newWeight) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setWeight(newWeight);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+    // 綜合更新資料的方法
+    public boolean updateUserData(String id, Map<String, Object> updates) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (!userOptional.isPresent()) {
+            return false;
+        }
+
+        User user = userOptional.get();
+
+        // 更新用戶名
+        if (updates.containsKey("username")) {
+            String newUsername = (String) updates.get("username");
+            if (userRepository.findByUsername(newUsername).isPresent()) {
+                return false; // 用戶名已被使用
+            }
+            user.setUsername(newUsername);
+        }
+
+        // 更新性別
+        if (updates.containsKey("gender")) {
+            String newGender = (String) updates.get("gender");
+            user.setGender(newGender);
+        }
+
+        // 更新身高
+        if (updates.containsKey("height")) {
+            Double newHeight = Double.parseDouble(updates.get("height").toString());
+            user.setHeight(newHeight);
+        }
+
+        // 更新體重
+        if (updates.containsKey("weight")) {
+            Double newWeight = Double.parseDouble(updates.get("weight").toString());
+            user.setWeight(newWeight);
+        }
+
+        // 保存更新後的用戶資料
+        userRepository.save(user);
+        return true;
     }
 }
