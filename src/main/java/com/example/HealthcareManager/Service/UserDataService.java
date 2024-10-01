@@ -12,10 +12,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.example.HealthcareManager.DTO.ExerciseLogDTO;
 import com.example.HealthcareManager.DTO.HabitDTO;
 import com.example.HealthcareManager.DTO.HealthDataDTO;
 import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
+import com.example.HealthcareManager.Repository.ExerciseLogDTORepository;
 import com.example.HealthcareManager.Repository.HealthDataDTORepository;
 import com.example.HealthcareManager.Repository.UserHabitDTORepository;
 import java.util.Optional;
@@ -30,42 +32,52 @@ public class UserDataService {
     private HealthDataDTORepository healthDataDTORepository;
 
     @Autowired
+    private ExerciseLogDTORepository exerciseLogDTORepository;
+
+    @Autowired
     private UserHabitDTORepository userHabitDTORepository;
 
     public List<Object> getUserDataList(String userId) {
-
         List<Object> userAllDataList = new ArrayList<>();
-
+    
         // 查找用户信息，处理 Optional<User> 的情况
         Optional<User> userOptional = accountRepository.findById(userId);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             userAllDataList.add(user);
         } else {
-            // 若用户不存在，可以抛出异常或返回空列表
-            throw new RuntimeException("User not found with ID: " + userId);
+            // 若用户不存在，可以选择添加 null 或返回空列表
+            userAllDataList.add(null); // 或者 userAllDataList.add("User not found");
         }
-
+    
         // 查找习惯信息
         HabitDTO habitDTO = userHabitDTORepository.findHabitDTOByUserId(userId);
         if (habitDTO != null) {
             userAllDataList.add(habitDTO);
         } else {
-            // 若习惯数据不存在，也可以选择处理或返回默认数据
-            throw new RuntimeException("Habit data not found for user ID: " + userId);
+            userAllDataList.add(null);
         }
-
+    
+        Pageable excerisepageable = PageRequest.of(0, 2);
+        List<ExerciseLogDTO> exceriseDataList = exerciseLogDTORepository.findExerciseLogDTOByUserId(userId, excerisepageable);
+        if (!exceriseDataList.isEmpty()) {
+            userAllDataList.add(exceriseDataList);
+        } else {
+            userAllDataList.add(null); 
+        }
+    
         // 查找健康数据，分页处理
         Pageable pageable = PageRequest.of(0, 10);
         List<HealthDataDTO> healthDataList = healthDataDTORepository.findByUserId(userId, pageable);
         if (!healthDataList.isEmpty()) {
             userAllDataList.add(healthDataList);
         } else {
-            throw new RuntimeException("Health data not found for user ID: " + userId);
+            userAllDataList.add(null);
         }
-
+    
         return userAllDataList;
     }
+    
 
     public Map<String, Object> getAllUserDataList() {
         Map<String, Object> allUserDataMap = new HashMap<>();
