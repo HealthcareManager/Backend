@@ -46,14 +46,14 @@ public class AuthController {
 
     @Autowired
     private AccountRepository accountRepository;
-    
-    @Autowired JwtService jwtService;
+
+    @Autowired
+    JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
         return accountService.registerUser(user);
     }
-
 
     @PostMapping("/google-login")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> tokenData) {
@@ -62,7 +62,8 @@ public class AuthController {
             Optional<User> user = accountService.verifyGoogleToken(idToken);
             if (user.isPresent()) {
                 User userInfo = user.get();
-                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： " + userInfo.getUsername() + " Email： " + userInfo.getEmail());
+                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： "
+                        + userInfo.getUsername() + " Email： " + userInfo.getEmail());
                 return ResponseEntity.ok(new User(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail()));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
@@ -71,15 +72,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token: " + e.getMessage());
         }
     }
-    
+
     @PostMapping("/facebook-login")
     public ResponseEntity<?> facebookLogin(@RequestBody String accessToken) {
-    	System.out.println("accessToken at fblogin is" + accessToken);
-    	try {
+        System.out.println("accessToken at fblogin is" + accessToken);
+        try {
             Optional<User> user = accountService.verifyFacebookToken(accessToken);
             if (user.isPresent()) {
                 User userInfo = user.get();
-                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： " + userInfo.getUsername() + " Email： " + userInfo.getEmail());
+                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： "
+                        + userInfo.getUsername() + " Email： " + userInfo.getEmail());
                 return ResponseEntity.ok(new User(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail()));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
@@ -87,9 +89,9 @@ public class AuthController {
         } catch (GeneralSecurityException | IOException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token: " + e.getMessage());
         }
-        
+
     }
-    
+
     @GetMapping("/line-callback")
     public String lineCallback(@RequestParam("code") String code) {
         // 使用认证码交换访问令牌
@@ -100,10 +102,10 @@ public class AuthController {
         }
         return "Error obtaining access token";
     }
-    
+
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody User user) {
-    	System.out.println("user is " + user);
+        System.out.println("user is " + user);
         return accountService.login(user);
     }
 
@@ -113,7 +115,7 @@ public class AuthController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String userId = userDetails.getUsername(); // 获取用户 ID
-        Optional<User> optionalUser = accountRepository.findById(userId); 
+        Optional<User> optionalUser = accountRepository.findById(userId);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             Map<String, String> responseBody = new HashMap<>();
@@ -129,7 +131,7 @@ public class AuthController {
             return ResponseEntity.ok(responseBody);
         } else {
             Map<String, String> responseBody = new HashMap<>();
-            responseBody.put("message",  "伺服器錯誤：用户不存在");
+            responseBody.put("message", "伺服器錯誤：用户不存在");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
         }
     }

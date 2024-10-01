@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.HealthcareManager.Model.User;
+import com.example.HealthcareManager.Repository.UserRepository;
+import com.example.HealthcareManager.Security.JwtAuthenticationFilter;
+import com.example.HealthcareManager.Security.JwtService;
 import com.example.HealthcareManager.Service.UserService;
 
 import java.io.File;
@@ -15,13 +18,18 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("api/auth")
@@ -30,9 +38,87 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    // 更新密碼
+    @PutMapping("update-password/{id}")
+    public ResponseEntity<String> updatePassword(@PathVariable String id,
+            @RequestBody Map<String, String> requestBody) {
+        String newPassword = requestBody.get("newPassword");
+        boolean update = userService.updatePassword(id, newPassword);
+        if (update) {
+            return ResponseEntity.ok("用戶密碼更新成功");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("用戶密碼更新失敗");
+        }
+    }
+
+    // 獲取用戶密碼
+    @GetMapping("/password/{id}")
+    public ResponseEntity<String> getPassword(@PathVariable String id) {
+        String password = userService.getPasswordById(id);
+        if (password != null) {
+            return ResponseEntity.ok(password); // 返回密碼
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("用戶不存在");
+        }
+    }
+
+    @PutMapping("update-user-data/{id}")
+    public ResponseEntity<String> updateUserData(@PathVariable String id,
+            @RequestBody Map<String, Object> requestBody) {
+
+                System.out.println("123");
+        // 檢查是否提供了用戶名並進行更新
+        if (requestBody.containsKey("username")) {
+            String newUsername = (String) requestBody.get("username");
+            if (userRepository.findByUsername(newUsername).isPresent()) {
+                System.out.println("該用戶名已被使用 " + newUsername);
+                return ResponseEntity.badRequest().body("該用戶名已被使用!");
+            }
+            boolean updateUsername = userService.updateUsername(id, newUsername);
+            if (!updateUsername) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("用戶名更新失敗");
+            }
+        }
+
+        // 檢查是否提供了性別並進行更新
+        if (requestBody.containsKey("gender")) {
+            String newGender = (String) requestBody.get("gender");
+            boolean updateGender = userService.updateGender(id, newGender);
+            if (!updateGender) {
+                System.out.println("該用戶名已被使用 " + newGender);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("性別更新失敗");
+            }
+        }
+
+        // 檢查是否提供了身高並進行更新
+        if (requestBody.containsKey("height")) {
+            Double newHeight = Double.parseDouble(requestBody.get("height").toString());
+            boolean updateHeight = userService.updateHeight(id, newHeight);
+            if (!updateHeight) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("身高更新失敗");
+            }
+        }
+
+        // 檢查是否提供了體重並進行更新
+        if (requestBody.containsKey("weight")) {
+            Double newWeight = Double.parseDouble(requestBody.get("weight").toString());
+            boolean updateWeight = userService.updateWeight(id, newWeight);
+            if (!updateWeight) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("體重更新失敗");
+            }
+        }
+
+        return ResponseEntity.ok("用戶資料更新成功");
+    }
+
     @PostMapping("/upload-image/{id}")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
-            @PathVariable(value = "id") String id) {
+            @PathVariable(value = "id") String id,
+            @RequestHeader("Authorization") String authorizationHeader) {
+
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("請選擇一個檔案來上傳。");
         }
