@@ -43,6 +43,10 @@ public class User {
  // 无参构造函数
     public User() {
     }
+
+	public User(String id) {
+		this.id = id;
+    }
     
     public User(String userId, String name, String email) {
     	this.id = userId;
