@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("api/auth")
+@RequestMapping("api/userData")
 public class UserController {
 
     @Autowired
@@ -69,7 +69,6 @@ public class UserController {
     public ResponseEntity<String> updateUserData(@PathVariable String id,
             @RequestBody Map<String, Object> requestBody) {
 
-                System.out.println("123");
         // 檢查是否提供了用戶名並進行更新
         if (requestBody.containsKey("username")) {
             String newUsername = (String) requestBody.get("username");
