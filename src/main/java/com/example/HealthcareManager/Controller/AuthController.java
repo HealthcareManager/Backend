@@ -92,37 +92,20 @@ public class AuthController {
     }
     
     @PostMapping("/line-callback")
-    public ResponseEntity<?> lineCallback(@RequestBody String code) {
-    	JSONObject jsonObject = new JSONObject(code);
-        String authorizationCode = jsonObject.getString("code");
-        // 使用認證碼交換訪問令牌
-    	System.out.println("code at line callback is " + authorizationCode);
-        Optional<Map<String, Object>> userOptional = accountService.getLineAccessToken(authorizationCode);
+    public ResponseEntity<User> lineCallback(@RequestBody Map<String, String> requestBody) {
+        String code = requestBody.get("code");  // 从请求体中获取 "code"
 
-        if (userOptional.isPresent()) {
-            Map<String, Object> userData = userOptional.get();
-
-//            // 創建 User 對象，並從 Map 中提取數據
-//            User user = new User();
-//            user.setId((String) userData.get("id"));
-//            user.setUsername((String) userData.get("username"));
-//            user.setEmail((String) userData.get("email"));
-//            // 設置其他字段...
-//
-//            // 創建返回的 JSON 對象，包含用戶信息
-//            Map<String, Object> response = new HashMap<>();
-//            response.put("status", "success");
-//            response.put("user", user);
-
-            return ResponseEntity.ok(userOptional);
+        // 使用认证码交换访问令牌
+        Optional<User> userInfoResponse = accountService.fetchUserInfoWithAccessToken(code);
+        if (userInfoResponse.isPresent()) {
+        	User user = userInfoResponse.get();
+            User userResponse = new User(user.getId(), user.getUsername(), user.getImagelink());
+            return ResponseEntity.ok(userResponse);
         }
-
-        // 返回錯誤信息
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("status", "error");
-        errorResponse.put("message", "Error obtaining access token");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
+
     
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody User user) {

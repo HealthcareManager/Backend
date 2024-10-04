@@ -56,87 +56,48 @@ public class AccountService {
     public AccountService() {
     }
     
-    public Optional<Map<String, Object>> getLineAccessToken(String code) {
+    public Optional<User> fetchUserInfoWithAccessToken(String accessToken) {
         RestTemplate restTemplate = new RestTemplate();
-        
-        // 构建请求体
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("code", code);
-        body.add("redirect_uri", LINE_REDIRECT_URI);
-        body.add("client_id", LINE_Channel_ID);
-        body.add("client_secret", LINE_CLIENT_SECRET);
-        
-        System.out.println("body send to line is " + body);
 
-        try {
-            // 设置请求头
+        if (accessToken != null) {
+            // 直接使用访问令牌获取用户信息
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.setBearerAuth(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            // 发送 GET 请求以获取用户信息
+            ResponseEntity<Map> userInfoResponse = restTemplate.exchange(LINE_USER_INFO_URL, HttpMethod.GET, entity, Map.class);
+            Map<String, Object> userInfo = userInfoResponse.getBody();
+            System.out.println("userInfo is " + userInfo);
 
-            // 发起请求获取访问令牌
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-            ResponseEntity<Map> response = restTemplate.postForEntity(LINE_TOKEN_URL, request, Map.class);
+            // 检查用户信息是否存在
+            if (userInfo != null) {
+                String userId = (String) userInfo.get("userId"); // 假设用户信息中有 userId 字段
+                Optional<User> existingUser = accountRepository.findById(userId);
+                System.out.println("displayName is " + existingUser);
+                if (!existingUser.isPresent()) {
+                    // 如果用户不存在，则新增用户
+                    User newUser = new User();
+                    newUser.setId(userId);
+                    //newUser.setEmail((String) userInfo.get("email")); // 假设用户信息中有 email 字段
+                    newUser.setUsername((String) userInfo.get("displayName")); // 假设用户信息中有 name 字段
+                    newUser.setImagelink(((String) userInfo.get("pictureUrl")));;
+                    System.out.println("newUser is " + newUser);
 
-            Map<String, Object> responseBody = response.getBody();
-            System.out.println("responseBody is " + responseBody);
-
-            // 获取访问令牌
-            String accessToken = responseBody != null ? (String) responseBody.get("access_token") : null;
-
-            if (accessToken != null) {
-                // 使用访问令牌获取用户信息
-                HttpHeaders userInfoHeaders = new HttpHeaders();
-                userInfoHeaders.setBearerAuth(accessToken);
-                HttpEntity<String> entity = new HttpEntity<>(userInfoHeaders);
-
-                // 发送 GET 请求以获取用户信息
-                ResponseEntity<Map> userInfoResponse = restTemplate.exchange(
-                		LINE_USER_INFO_URL, HttpMethod.GET, entity, Map.class);
-                Map<String, Object> userInfo = userInfoResponse.getBody();
-                System.out.println("userInfo is " + userInfo);
-
-                // 检查用户信息是否存在
-                if (userInfo != null) {
-                    String userId = (String) userInfo.get("userId"); // 确保获取正确的字段名
-                    Optional<User> existingUser = accountRepository.findById(userId);
-                    System.out.println("existingUser is " + existingUser);
-                    User user;
-
-                    if (!existingUser.isPresent()) {
-                        // 如果用户不存在，则新增用户
-                        user = new User();
-                        user.setId(userId);
-                        user.setUsername((String) userInfo.get("displayName"));
-                        user.setImagelink((String) userInfo.get("pictureUrl"));
-
-                        // 设置其他必要的字段
-                        accountRepository.save(user);
-                    } else {
-                        // 如果用户已存在
-                        user = existingUser.get();
-                    }
-
-                    // 创建返回的 Map
-                    Map<String, Object> resultMap = new HashMap<>();
-                    resultMap.put("userId", userId);
-                    resultMap.put("username", user.getUsername());
-                    resultMap.put("email", user.getEmail());
-                    resultMap.put("imageLink", user.getImagelink());
-
-                    return Optional.of(resultMap); // 返回用户信息的 Map
+                    accountRepository.save(newUser);
+                    return Optional.of(newUser); // 返回新创建的用户
                 }
+                User user = existingUser.get();
+                System.out.println("User ID: " + user.getId());
+                System.out.println("Username: " + user.getUsername());
+                System.out.println("Email: " + user.getEmail());
+                System.out.println("Image Link: " + user.getImagelink());
+                System.out.println("existingUser is " + existingUser);
+                return existingUser; // 如果用户存在，返回现有用户
             }
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-            e.printStackTrace();
         }
-
-        // 如果无法获取访问令牌或用户信息，返回空的 Optional
-        return Optional.empty();
+        return Optional.empty(); // 如果访问令牌为空，返回空的 Optional
     }
-
-
 
     public Optional<User> verifyGoogleToken(String idTokenString)
             throws GeneralSecurityException, IOException, java.io.IOException {
