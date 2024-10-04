@@ -7,6 +7,7 @@ import com.example.HealthcareManager.Service.HealthMetricsService;
 import com.example.HealthcareManager.Repository.HealthMetricsRepository;
 import com.example.HealthcareManager.Repository.UserRepository;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,31 +38,33 @@ public class HealthMetricsController {
     }
 
     @PostMapping("/api/user-metrics/{userId}")
-public ResponseEntity<?> getUserMetrics(@PathVariable String userId) {
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    public ResponseEntity<?> getUserMetrics(@PathVariable String userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-    List<HealthMetrics> metricsList = healthMetricsRepository.findByUserId(userId);
+        List<HealthMetrics> metricsList = healthMetricsRepository.findByUserId(userId);
+        System.out.println(metricsList);
+        if (metricsList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No metrics found for user.");
+        }
 
-    if (metricsList.isEmpty()) {
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No metrics found for user.");
+        // 将 HealthMetrics 转换为 UserMetricsResponse.Metric 并封装到 UserMetricsResponse
+        List<UserMetricsResponse.Metric> metrics = metricsList.stream().map(metric -> {
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+            String formattedDate = metric.getDate().format(formatter);
+            return new UserMetricsResponse.Metric(
+                metric.getId(), 
+                metric.getHeartRate(), 
+                metric.getBloodPressure(), 
+                metric.getBloodSugar(), 
+                metric.getBloodOxygen(), 
+                formattedDate  // 使用格式化的时间戳
+            );
+        }).collect(Collectors.toList());
+
+        UserMetricsResponse response = new UserMetricsResponse(user.getId().toString(), metrics);
+        return ResponseEntity.ok(response);
     }
-
-    // 將 HealthMetrics 轉換為 UserMetricsResponse.Metric 並封裝到 UserMetricsResponse
-    List<UserMetricsResponse.Metric> metrics = metricsList.stream().map(metric -> 
-        new UserMetricsResponse.Metric(
-            metric.getId(), 
-            metric.getHeartRate(), 
-            metric.getBloodPressure(), 
-            metric.getBloodSugar(), 
-            metric.getBloodOxygen(), 
-            metric.getDate().toString()  // 假設使用 LocalDateTime，你可以根據具體的時間格式進行調整
-        )
-    ).collect(Collectors.toList());
-
-    UserMetricsResponse response = new UserMetricsResponse(user.getId().toString(), metrics);
-    return ResponseEntity.ok(response);
-}
 
 
 
