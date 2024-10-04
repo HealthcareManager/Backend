@@ -7,7 +7,10 @@ import com.example.HealthcareManager.Service.HealthMetricsService;
 import com.example.HealthcareManager.Repository.HealthMetricsRepository;
 import com.example.HealthcareManager.Repository.UserRepository;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +25,8 @@ public class HealthMetricsController {
     private final HealthMetricsService healthMetricsService;
     private final UserRepository userRepository;
     private final HealthMetricsRepository healthMetricsRepository;
+    private final UserMetricsResponse userMetricsResponse;
+
 
     // 使用構造函數注入
     @Autowired
@@ -29,23 +34,38 @@ public class HealthMetricsController {
         this.healthMetricsService = healthMetricsService;
         this.userRepository = userRepository;
         this.healthMetricsRepository = healthMetricsRepository;
+        this.userMetricsResponse = null;
     }
 
-      @PostMapping("/api/user-metrics/{userId}")
+    @PostMapping("/api/user-metrics/{userId}")
     public ResponseEntity<?> getUserMetrics(@PathVariable String userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         List<HealthMetrics> metricsList = healthMetricsRepository.findByUserId(userId);
-
+        System.out.println(metricsList);
         if (metricsList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No metrics found for user.");
         }
 
-        // 將數據封裝成 UserMetricsResponse 格式
-        UserMetricsResponse response = new UserMetricsResponse(user.getId(), metricsList);
+        // 将 HealthMetrics 转换为 UserMetricsResponse.Metric 并封装到 UserMetricsResponse
+        List<UserMetricsResponse.Metric> metrics = metricsList.stream().map(metric -> {
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+            String formattedDate = metric.getDate().format(formatter);
+            return new UserMetricsResponse.Metric(
+                metric.getId(), 
+                metric.getHeartRate(), 
+                metric.getBloodPressure(), 
+                metric.getBloodSugar(), 
+                metric.getBloodOxygen(), 
+                formattedDate  // 使用格式化的时间戳
+            );
+        }).collect(Collectors.toList());
+
+        UserMetricsResponse response = new UserMetricsResponse(user.getId().toString(), metrics);
         return ResponseEntity.ok(response);
     }
+
 
 
     // 手動為指定用戶生成假數據的 API
