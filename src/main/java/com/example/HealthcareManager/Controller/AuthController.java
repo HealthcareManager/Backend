@@ -46,14 +46,14 @@ public class AuthController {
 
     @Autowired
     private AccountRepository accountRepository;
-
-    @Autowired
-    JwtService jwtService;
+    
+    @Autowired JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
         return accountService.registerUser(user);
     }
+
 
     @PostMapping("/google-login")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> tokenData) {
@@ -62,8 +62,7 @@ public class AuthController {
             Optional<User> user = accountService.verifyGoogleToken(idToken);
             if (user.isPresent()) {
                 User userInfo = user.get();
-                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： "
-                        + userInfo.getUsername() + " Email： " + userInfo.getEmail());
+                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： " + userInfo.getUsername() + " Email： " + userInfo.getEmail());
                 return ResponseEntity.ok(new User(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail()));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
@@ -72,16 +71,15 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token: " + e.getMessage());
         }
     }
-
+    
     @PostMapping("/facebook-login")
     public ResponseEntity<?> facebookLogin(@RequestBody String accessToken) {
-        System.out.println("accessToken at fblogin is" + accessToken);
-        try {
+    	System.out.println("accessToken at fblogin is" + accessToken);
+    	try {
             Optional<User> user = accountService.verifyFacebookToken(accessToken);
             if (user.isPresent()) {
                 User userInfo = user.get();
-                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： "
-                        + userInfo.getUsername() + " Email： " + userInfo.getEmail());
+                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： " + userInfo.getUsername() + " Email： " + userInfo.getEmail());
                 return ResponseEntity.ok(new User(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail()));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
@@ -89,9 +87,9 @@ public class AuthController {
         } catch (GeneralSecurityException | IOException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token: " + e.getMessage());
         }
-
+        
     }
-
+    
     @GetMapping("/line-callback")
     public String lineCallback(@RequestParam("code") String code) {
         // 使用认证码交换访问令牌
@@ -102,38 +100,55 @@ public class AuthController {
         }
         return "Error obtaining access token";
     }
-
+    
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody User user) {
-        System.out.println("user is " + user);
+    	System.out.println("user is " + user);
         return accountService.login(user);
     }
 
     @PostMapping("/validate-token")
-    public ResponseEntity<Map<String, String>> getProtectedData(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUsername(); // 获取用户 ID
-        Optional<User> optionalUser = accountRepository.findById(userId);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            Map<String, String> responseBody = new HashMap<>();
-            responseBody.put("username", user.getUsername());
-            responseBody.put("id", user.getId());
-            responseBody.put("userImage", user.getImagelink());
-            responseBody.put("email", user.getEmail());
-            responseBody.put("password", user.getPassword());
-            responseBody.put("gender", user.getGender());
-            responseBody.put("height", user.getHeight().toString());
-            responseBody.put("weight", user.getWeight().toString());
-            responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
-            return ResponseEntity.ok(responseBody);
-        } else {
-            Map<String, String> responseBody = new HashMap<>();
-            responseBody.put("message", "伺服器錯誤：用户不存在");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
-        }
+public ResponseEntity<Map<String, String>> getProtectedData(
+        @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    
+    if (authentication == null || !authentication.isAuthenticated()) {
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("message", "無效的身份驗證");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
     }
+
+    String userId;
+    if (authentication.getPrincipal() instanceof UserDetails) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        userId = userDetails.getUsername(); // 获取用户 ID
+    } else if (authentication.getPrincipal() instanceof String) {
+        userId = (String) authentication.getPrincipal(); // 直接获取用户名
+    } else {
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("message", "無法識別身份驗證對象");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+    }
+
+    Optional<User> optionalUser = accountRepository.findById(userId); 
+    if (optionalUser.isPresent()) {
+        User user = optionalUser.get();
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("username", user.getUsername());
+        responseBody.put("id", user.getId());
+        responseBody.put("userImage", user.getImagelink());
+        responseBody.put("email", user.getEmail());
+        responseBody.put("password", user.getPassword());
+        responseBody.put("gender", user.getGender());
+        responseBody.put("height", user.getHeight().toString());
+        responseBody.put("weight", user.getWeight().toString());
+        responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
+        return ResponseEntity.ok(responseBody);
+    } else {
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("message", "伺服器錯誤：用户不存在");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
+    }
+}
 
 }

@@ -39,16 +39,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        filterChain.doFilter(request, response);//暫時關閉filter
-
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userId;
 
         String requestURI = request.getRequestURI();
         System.out.println(requestURI);
-        if (requestURI.equals("/api/auth/login") || requestURI.equals("/api/auth/register") || requestURI.equals("/api/auth/google-login") || requestURI.equals("/api/auth/facebook-login") || requestURI.equals("/api/auth/line-callback")|| requestURI.equals("/api/payment")|| requestURI.equals("/api/save")|| requestURI.equals("/api/details/{orderId}")|| requestURI.equals("/api/healthData")|| requestURI.equals("/api/admin/admin-login") || requestURI.equals("images/*")) {
-
+        if (requestURI.equals("/api/auth/login") || requestURI.equals("/api/auth/register") || requestURI.equals("/api/auth/google-login") || requestURI.equals("/api/auth/facebook-login") || requestURI.equals("/api/auth/line-callback")|| requestURI.equals("/api/payment")|| requestURI.equals("/api/save")|| requestURI.equals("/api/details/{orderId}")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -75,11 +72,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            if (SecurityContextHolder.getContext().getAuthentication() != null) {
-                logger.warn("Authentication is already set in the security context");
-                filterChain.doFilter(request, response);
-                return;
-            }
+            // if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            //     logger.warn("Authentication is already set in the security context");
+            //     filterChain.doFilter(request, response);
+            //     return;
+            // }
 
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userId);
             if (userDetails == null) {
