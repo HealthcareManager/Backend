@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -90,16 +91,21 @@ public class AuthController {
         
     }
     
-    @GetMapping("/line-callback")
-    public String lineCallback(@RequestParam("code") String code) {
+    @PostMapping("/line-callback")
+    public ResponseEntity<User> lineCallback(@RequestBody Map<String, String> requestBody) {
+        String code = requestBody.get("code");  // 从请求体中获取 "code"
+
         // 使用认证码交换访问令牌
-        Optional<User> accessToken = accountService.getLineAccessToken(code);
-        if (accessToken != null) {
-            // 使用访问令牌获取用户信息
-            return "Sucsess";
+        Optional<User> userInfoResponse = accountService.fetchUserInfoWithAccessToken(code);
+        if (userInfoResponse.isPresent()) {
+        	User user = userInfoResponse.get();
+            User userResponse = new User(user.getId(), user.getUsername(), user.getImagelink());
+            return ResponseEntity.ok(userResponse);
         }
-        return "Error obtaining access token";
+        
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
+
     
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody User user) {
@@ -117,6 +123,13 @@ public ResponseEntity<Map<String, String>> getProtectedData(
         responseBody.put("message", "無效的身份驗證");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
     }
+    
+    
+
+    // @PostMapping("/test")
+    // public String test() {
+    //     return "test";
+    // }
 
     String userId;
     if (authentication.getPrincipal() instanceof UserDetails) {
