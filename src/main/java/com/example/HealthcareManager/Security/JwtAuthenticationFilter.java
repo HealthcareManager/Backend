@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        filterChain.doFilter(request, response);//暫時關閉filter
+        // filterChain.doFilter(request, response);//暫時關閉filter
 
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
         System.out.println(requestURI);
-        if (requestURI.equals("/api/auth/login") || requestURI.equals("/api/auth/register") || requestURI.equals("/api/auth/google-login") || requestURI.equals("/api/auth/facebook-login") || requestURI.equals("/api/auth/line-callback")|| requestURI.equals("/api/payment")|| requestURI.equals("/api/save")|| requestURI.equals("/api/details/{orderId}")|| requestURI.equals("/api/healthData")|| requestURI.equals("/api/admin/admin-login") || requestURI.equals("images/*")) {
+        if (requestURI.matches("/api/user-metrics/\\d+")|| requestURI.equals("/api/generate-fake-data/all")  || requestURI.equals("/api/auth/login") || requestURI.equals("/api/auth/register") || requestURI.equals("/api/auth/google-login") || requestURI.equals("/api/auth/facebook-login") || requestURI.equals("/api/auth/line-callback")|| requestURI.equals("/api/payment")|| requestURI.equals("/api/save")|| requestURI.equals("/api/details/{orderId}")|| requestURI.equals("/api/healthData")|| requestURI.equals("/api/admin/admin-login") || requestURI.equals("images/*")) {
 
             filterChain.doFilter(request, response);
             return;
