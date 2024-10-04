@@ -46,12 +46,7 @@ public class AccountService {
 
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final String Google_CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google
-    private static final String LINE_TOKEN_URL = "https://api.line.me/oauth2/v2.1/token";
     private static final String LINE_USER_INFO_URL = "https://api.line.me/v2/profile";
-    private static final String LINE_Channel_ID = "2006371057"; // 从 LINE Developers 获取
-    private static final String LINE_CLIENT_SECRET = "b0fc2958b7a310628b4d3bcb6ccdda00"; // 从 LINE Developers 获取
-    private static final String LINE_REDIRECT_URI = "http://192.168.50.38:8080/HealthcareManager/api/auth/line-callback";
-    
     // 移除 @Autowired 和構造函數中的 User 注入
     public AccountService() {
     }
