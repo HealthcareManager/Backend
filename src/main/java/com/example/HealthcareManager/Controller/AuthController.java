@@ -122,6 +122,7 @@ public ResponseEntity<Map<String, String>> getProtectedData(
     if (authentication.getPrincipal() instanceof UserDetails) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         userId = userDetails.getUsername(); // 获取用户 ID
+        System.out.println(userId);
     } else if (authentication.getPrincipal() instanceof String) {
         userId = (String) authentication.getPrincipal(); // 直接获取用户名
     } else {
