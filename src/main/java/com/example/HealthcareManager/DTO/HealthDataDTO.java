@@ -10,22 +10,16 @@ public class HealthDataDTO {
     private float bloodSugar;
     private float bloodOxygen;
     private LocalDateTime date;
-    private double caloriesBurned;
-    private double sleepDuration;
-    private Integer steps;
 
     // 更新建構函數，包含所有必要屬性
     public HealthDataDTO(String id, Integer heartRate, String bloodPressure, float bloodSugar, float bloodOxygen,
-            LocalDateTime date, double caloriesBurned, double sleepDuration, Integer steps) {
+            LocalDateTime date) {
         this.id = id;
         this.heartRate = heartRate;
         this.bloodPressure = bloodPressure;
         this.bloodSugar = bloodSugar;
         this.bloodOxygen = bloodOxygen;
         this.date = date;
-        this.caloriesBurned = caloriesBurned;
-        this.sleepDuration = sleepDuration;
-        this.steps = steps;
     }
 
     public String getId() {
@@ -76,29 +70,7 @@ public class HealthDataDTO {
         this.date = date;
     }
 
-    public Double getCaloriesBurned() {
-        return caloriesBurned;
-    }
-
-    public void setCaloriesBurned(double caloriesBurned) {
-        this.caloriesBurned = caloriesBurned;
-    }
-
-    public double getSleepDuration() {
-        return sleepDuration;
-    }
-
-    public void setSleepDuration(double sleepDuration) {
-        this.sleepDuration = sleepDuration;
-    }
-
-    public Integer getSteps() {
-        return steps;
-    }
-
-    public void setSteps(Integer steps) {
-        this.steps = steps;
-    }
+    
 }
 
 

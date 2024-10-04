@@ -18,7 +18,7 @@ import com.example.HealthcareManager.ConsumerCheck;
 
 
 @RestController
-@RequestMapping("/checkout")
+@RequestMapping("/api")
 public class LinePayController {
 
     @Autowired

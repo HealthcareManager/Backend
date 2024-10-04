@@ -72,11 +72,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            if (SecurityContextHolder.getContext().getAuthentication() != null) {
-                logger.warn("Authentication is already set in the security context");
-                filterChain.doFilter(request, response);
-                return;
-            }
+            // if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            //     logger.warn("Authentication is already set in the security context");
+            //     filterChain.doFilter(request, response);
+            //     return;
+            // }
 
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userId);
             if (userDetails == null) {

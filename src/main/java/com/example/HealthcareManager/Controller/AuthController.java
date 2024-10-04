@@ -114,44 +114,14 @@ public class AuthController {
     }
 
     @PostMapping("/validate-token")
-    public ResponseEntity<Map<String, String>> getProtectedData(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        // // 检查 Authorization 头是否存在
-        // if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        //     Map<String, String> responseBody = new HashMap<>();
-        //     responseBody.put("message", "缺少或无效的 Authorization");
-        //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
-        // }
-        // // 提取 JWT
-        // String jwt = authHeader.substring(7);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        // 从 JWT 中获取用户名并查询用户信息
-        // if (authentication == null || !authentication.isAuthenticated()) {
-        //     Map<String, String> responseBody = new HashMap<>();
-        //     responseBody.put("message", "无效的 JWT");
-        //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
-        // }
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUsername(); // 获取用户 ID
-        Optional<User> optionalUser = accountRepository.findById(userId); 
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            Map<String, String> responseBody = new HashMap<>();
-            responseBody.put("username", user.getUsername());
-            responseBody.put("id", user.getId());
-            responseBody.put("userImage", user.getImagelink());
-            responseBody.put("email", user.getEmail());
-            responseBody.put("password", user.getPassword());
-            responseBody.put("gender", user.getGender());
-            responseBody.put("height", user.getHeight().toString());
-            responseBody.put("weight", user.getWeight().toString());
-            responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
-            return ResponseEntity.ok(responseBody);
-        } else {
-            Map<String, String> responseBody = new HashMap<>();
-            responseBody.put("message",  "伺服器錯誤：用户不存在");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
-        }
+public ResponseEntity<Map<String, String>> getProtectedData(
+        @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    
+    if (authentication == null || !authentication.isAuthenticated()) {
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("message", "無效的身份驗證");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
     }
     
     
@@ -160,5 +130,38 @@ public class AuthController {
     // public String test() {
     //     return "test";
     // }
+
+    String userId;
+    if (authentication.getPrincipal() instanceof UserDetails) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        userId = userDetails.getUsername(); // 获取用户 ID
+    } else if (authentication.getPrincipal() instanceof String) {
+        userId = (String) authentication.getPrincipal(); // 直接获取用户名
+    } else {
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("message", "無法識別身份驗證對象");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+    }
+
+    Optional<User> optionalUser = accountRepository.findById(userId); 
+    if (optionalUser.isPresent()) {
+        User user = optionalUser.get();
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("username", user.getUsername());
+        responseBody.put("id", user.getId());
+        responseBody.put("userImage", user.getImagelink());
+        responseBody.put("email", user.getEmail());
+        responseBody.put("password", user.getPassword());
+        responseBody.put("gender", user.getGender());
+        responseBody.put("height", user.getHeight().toString());
+        responseBody.put("weight", user.getWeight().toString());
+        responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
+        return ResponseEntity.ok(responseBody);
+    } else {
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("message", "伺服器錯誤：用户不存在");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
+    }
+}
 
 }
