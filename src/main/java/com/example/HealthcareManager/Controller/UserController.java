@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("api/auth")
+@RequestMapping("api/userData")
 public class UserController {
 
     @Autowired
@@ -69,7 +69,6 @@ public class UserController {
     public ResponseEntity<String> updateUserData(@PathVariable String id,
             @RequestBody Map<String, Object> requestBody) {
 
-                System.out.println("123");
         // 檢查是否提供了用戶名並進行更新
         if (requestBody.containsKey("username")) {
             String newUsername = (String) requestBody.get("username");
@@ -145,7 +144,7 @@ public class UserController {
             Files.write(filePath, file.getBytes());
 
             // 更新為正確的基本 URL
-            String baseUrl = "http://10.0.2.2:8080/"; // 確保這裡的端口和地址正確
+            String baseUrl = "http://192.168.50.38:8080/HealthcareManager/"; // 確保這裡的端口和地址正確
             String relativeImagePath = "images/" + fileName;
             String fullImageUrl = baseUrl + relativeImagePath;
 

@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 public class User {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
 
     private String username;
@@ -48,10 +47,10 @@ public class User {
 		this.id = id;
     }
     
-    public User(String userId, String name, String email) {
+    public User(String userId, String name, String imagelink) {
     	this.id = userId;
         this.username = name;
-        this.email = email;
+        this.imagelink =imagelink;
 	}
 
 	public String getPhoneNumber() {
