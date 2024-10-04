@@ -5,6 +5,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -49,35 +50,14 @@ public class AccountService {
 
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final String Google_CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google
-    private static final String LINE_TOKEN_URL = "https://api.line.me/oauth2/v2.1/token";
     private static final String LINE_USER_INFO_URL = "https://api.line.me/v2/profile";
-    private static final String LINE_Channel_ID = "2006371057"; // 从 LINE Developers 获取
-    private static final String LINE_CLIENT_SECRET = "b0fc2958b7a310628b4d3bcb6ccdda00"; // 从 LINE Developers 获取
-    private static final String LINE_REDIRECT_URI = "http://192.168.50.38:8080/HealthcareManager/api/auth/line-callback";
-    
     // 移除 @Autowired 和構造函數中的 User 注入
     public AccountService(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
     
-    public Optional<User> getLineAccessToken(String code) {
+    public Optional<User> fetchUserInfoWithAccessToken(String accessToken) {
         RestTemplate restTemplate = new RestTemplate();
-        // 构建请求体
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("code", code);
-        body.add("redirect_uri", LINE_REDIRECT_URI);
-        body.add("client_id", LINE_Channel_ID);
-        body.add("client_secret", LINE_CLIENT_SECRET);
-        System.out.println("body send to line is " + body);
-
-        // 发送 POST 请求以获取访问令牌
-        ResponseEntity<Map> response = restTemplate.postForEntity(LINE_TOKEN_URL, body, Map.class);
-        Map<String, Object> responseBody = response.getBody();
-        System.out.println("responseBody is " + responseBody);
-
-        // 返回访问令牌
-        String accessToken = responseBody != null ? (String) responseBody.get("access_token") : null;
 
         if (accessToken != null) {
             // 直接使用访问令牌获取用户信息
@@ -102,16 +82,20 @@ public class AccountService {
                     //newUser.setEmail((String) userInfo.get("email")); // 假设用户信息中有 email 字段
                     newUser.setUsername((String) userInfo.get("displayName")); // 假设用户信息中有 name 字段
                     newUser.setImagelink(((String) userInfo.get("pictureUrl")));;
-                    // 设置其他必要的字段
+                    System.out.println("newUser is " + newUser);
 
                     accountRepository.save(newUser);
                     return Optional.of(newUser); // 返回新创建的用户
                 }
-
+                User user = existingUser.get();
+                System.out.println("User ID: " + user.getId());
+                System.out.println("Username: " + user.getUsername());
+                System.out.println("Email: " + user.getEmail());
+                System.out.println("Image Link: " + user.getImagelink());
+                System.out.println("existingUser is " + existingUser);
                 return existingUser; // 如果用户存在，返回现有用户
             }
         }
-
         return Optional.empty(); // 如果访问令牌为空，返回空的 Optional
     }
 

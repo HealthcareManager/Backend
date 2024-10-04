@@ -46,7 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userId;
-
         try {
             // 檢查 Authorization header 是否存在
             if (authHeader == null || authHeader.trim().isEmpty()) {
