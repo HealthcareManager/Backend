@@ -45,7 +45,7 @@ public class AccountService {
     private JwtService jwtService;
 
     private static final int MAX_LOGIN_ATTEMPTS = 5;
-    private static final String Google_CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google
+    private static final String Google_CLIENT_ID = "1049293083717-ug9kug6f81n4tc51uahp288eeo0rfc8l.apps.googleusercontent.com"; // 替换为您的 Google
     private static final String LINE_USER_INFO_URL = "https://api.line.me/v2/profile";
     // 移除 @Autowired 和構造函數中的 User 注入
     public AccountService() {
@@ -112,7 +112,7 @@ public class AccountService {
             // 检查用户是否已注册
             Optional<User> existingUser = accountRepository.findByEmail(email);
             System.out.println("existingUser is " + existingUser);
-            if (existingUser == null) {
+            if (existingUser.isEmpty()) {
                 // 用户未注册，创建新用户
                 User newUser = new User(userId, name, email);
                 accountRepository.save(newUser); // 保存到数据库
