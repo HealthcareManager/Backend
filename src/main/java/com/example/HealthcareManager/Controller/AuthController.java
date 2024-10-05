@@ -130,17 +130,18 @@ public class AuthController {
         // return "test";
         // }
 
-        String userId;
-        if (authentication.getPrincipal() instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            userId = userDetails.getUsername(); // 获取用户 ID
-        } else if (authentication.getPrincipal() instanceof String) {
-            userId = (String) authentication.getPrincipal(); // 直接获取用户名
-        } else {
-            Map<String, String> responseBody = new HashMap<>();
-            responseBody.put("message", "無法識別身份驗證對象");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
-        }
+    String userId;
+    if (authentication.getPrincipal() instanceof UserDetails) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        userId = userDetails.getUsername(); // 获取用户 ID
+        System.out.println(userId);
+    } else if (authentication.getPrincipal() instanceof String) {
+        userId = (String) authentication.getPrincipal(); // 直接获取用户名
+    } else {
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("message", "無法識別身份驗證對象");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+    }
 
         Optional<User> optionalUser = accountRepository.findById(userId);
         if (optionalUser.isPresent()) {
