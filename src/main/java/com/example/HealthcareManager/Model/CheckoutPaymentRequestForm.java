@@ -80,4 +80,14 @@ public class CheckoutPaymentRequestForm {
     public void setPackages(List<ProductPackageForm> packages) {
         this.packages = packages;
     }
+    @Override
+    public String toString() {
+        return "CheckoutPaymentRequestForm{" +
+                "orderId='" + orderId + '\'' +
+                ", amount=" + amount +
+                ", currency='" + currency + '\'' +
+                ", packages=" + packages + // 假設有一個 packages 屬性
+                ", redirectUrls=" + redirectUrls + // 假設有一個 redirectUrls 屬性
+                '}';
+    }
 }

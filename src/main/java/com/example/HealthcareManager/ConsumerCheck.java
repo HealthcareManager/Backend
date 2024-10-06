@@ -1,8 +1,10 @@
 package com.example.HealthcareManager;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
@@ -18,13 +20,18 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.HealthcareManager.Model.CheckoutPaymentRequestForm;
+import com.example.HealthcareManager.Model.Payment;
 import com.example.HealthcareManager.Model.ProductForm;
 import com.example.HealthcareManager.Model.ProductPackageForm;
 import com.example.HealthcareManager.Model.RedirectUrls;
 import com.example.HealthcareManager.Repository.CheckoutPaymentRequestFormRepository;
+import com.example.HealthcareManager.Repository.PaymentRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 public class ConsumerCheck {
@@ -37,6 +44,10 @@ public class ConsumerCheck {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
+
 
     private static final String CHANNEL_SECRET = "5b754d3c661a31399d318c968d4e5081"; // 測試用的 Channel Secret
     private static final String REQUEST_URI = "/v3/payments/request";
@@ -86,4 +97,39 @@ public class ConsumerCheck {
             return Map.of("status", "failed", "error", e.getMessage());
         }
     }
+
+    public void savePaymentRequest(CheckoutPaymentRequestForm requestForm) {
+
+        // 確認 requestForm 內的資料有效
+        System.out.println("Request Form details: " + requestForm.toString());
+
+        // 將 CheckoutPaymentRequestForm 轉換為 Payment 實體
+        Payment payment = new Payment();
+        payment.setOrderId(requestForm.getOrderId());
+        payment.setUserId(null); // 初始設為 null，等到支付成功後再寫入
+        payment.setStatus("PENDING"); // 初始狀態設置為 "PENDING"
+
+    
+        // 保存到資料庫
+        paymentRepository.save(payment);
+    }
+    
+    public boolean updatePaymentStatus(String orderId, String userId, String status) {
+        Optional<Payment> paymentOpt = paymentRepository.findByOrderId(orderId);
+        if (paymentOpt.isPresent()) {
+            Payment payment = paymentOpt.get();
+            payment.setUserId(userId); // 更新用戶 ID
+            payment.setStatus(status); // 更新支付狀態
+
+        // 設置支付成功的時間，當狀態為 "SUCCESS" 時
+        if ("SUCCESS".equals(status)) {
+            payment.setPaymentTime(LocalDateTime.now());
+        }
+
+            paymentRepository.save(payment);
+            return true;
+        }
+        return false;
+    }
+    
 }
