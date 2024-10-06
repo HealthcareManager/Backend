@@ -7,7 +7,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -48,7 +52,8 @@ public class AccountService {
     private static final String Google_CLIENT_ID = "709151275791-j69ulvv0dlajor84m9v1lfb62m2gbur0.apps.googleusercontent.com"; // 替换为您的 Google
     private static final String LINE_USER_INFO_URL = "https://api.line.me/v2/profile";
     // 移除 @Autowired 和構造函數中的 User 注入
-    public AccountService() {
+    public AccountService(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
     
     public Optional<User> fetchUserInfoWithAccessToken(String accessToken) {
@@ -159,7 +164,7 @@ public class AccountService {
         }
     }
 
-
+    private final PasswordEncoder passwordEncoder;
     public ResponseEntity<String> registerUser(User user) {
 
         if (accountRepository.findByUsername(user.getUsername()).isPresent()) {
@@ -175,7 +180,8 @@ public class AccountService {
             user.setAccountLocked(false); // 初始化帳戶鎖定狀態
             user.setCreatedAt(LocalDateTime.now()); // 設置創建時間
             user.setEmail(user.getEmail());
-            user.setPassword(user.getPassword()); // 加密密码
+            user.setPassword(user.getPassword()); 
+            user.setPassword(passwordEncoder.encode(user.getPassword())); // 加密密码
             user.setDateOfBirth(user.getDateOfBirth());
             user.setHeight(user.getHeight());
             user.setWeight(user.getWeight());
@@ -188,7 +194,22 @@ public class AccountService {
         }
     }
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
     public ResponseEntity<Map<String, String>> login(User user) {
+
+         try {
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    user.getUsername(),
+                    user.getPassword()
+                )
+            );
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("message", "Failed Login")); // 返回錯誤信息和錯誤次數
+        }
         if (checkAccountLocked(user.getUsername())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Collections.singletonMap("message", "帳戶已被鎖定，請聯繫管理員"));
@@ -196,7 +217,7 @@ public class AccountService {
         Optional<User> optionalUser = accountRepository.findByUsername(user.getUsername());
         if (optionalUser.isPresent()) {
             User existingUser = optionalUser.get();
-            if (existingUser.getPassword().equals(user.getPassword())) {
+            if (passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
                 existingUser.setLoginAttempts(0); // 重置登錄嘗試次數
                 accountRepository.save(existingUser);
                 return ResponseEntity.ok(createLoginResponse(existingUser));
