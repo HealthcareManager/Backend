@@ -54,14 +54,17 @@ public class UserController {
         }
     }
 
-    // 獲取用戶密碼
-    @GetMapping("/password/{id}")
-    public ResponseEntity<String> getPassword(@PathVariable String id) {
-        String password = userService.getPasswordById(id);
-        if (password != null) {
-            return ResponseEntity.ok(password); // 返回密碼
+    // 密碼驗證接口
+    @GetMapping("/verify-password/{id}")
+    public ResponseEntity<String> getPassword(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
+
+        String rawPassword = requestBody.get("password");
+        boolean isPasswordCorrect = userService.verifyPassword(id, rawPassword);
+
+        if (isPasswordCorrect) {
+            return ResponseEntity.ok("密碼正確");
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("用戶不存在");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("密碼不正確");
         }
     }
 
@@ -144,7 +147,9 @@ public class UserController {
             Files.write(filePath, file.getBytes());
 
             // 更新為正確的基本 URL
-            String baseUrl = "http://192.168.50.38:8080/HealthcareManager/"; // 確保這裡的端口和地址正確
+            // String baseUrl = "http://192.168.50.38:8080/HealthcareManager/"; //
+            // 確保這裡的端口和地址正確
+            String baseUrl = "http://10.0.2.2:8080/";
             String relativeImagePath = "images/" + fileName;
             String fullImageUrl = baseUrl + relativeImagePath;
 

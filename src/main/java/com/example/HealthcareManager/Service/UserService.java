@@ -9,6 +9,7 @@ import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +18,13 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     // 上傳圖片
     public void saveImagePath(String id, String imagePath) {
@@ -48,7 +56,8 @@ public class UserService {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            user.setPassword(newPassword); // 這裡應該進行加密
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.setPassword(encodedPassword);
             userRepository.save(user);
             return true;
         }
@@ -56,14 +65,17 @@ public class UserService {
     }
 
     // 通過用戶 ID 獲取密碼
-    public String getPasswordById(String id) {
+    public boolean verifyPassword(String id, String rawPassword) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            return user.getPassword(); // 返回存儲的密碼
+    
+            // 使用 PasswordEncoder 來比對明文密碼與存儲的加密密碼
+            return passwordEncoder.matches(rawPassword, user.getPassword());
         }
-        return null; // 如果用戶不存在
+        return false; // 如果用戶不存在或密碼不匹配，返回 false
     }
+    
 
     // 性別
     public boolean updateGender(String id, String newGender) {
