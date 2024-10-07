@@ -41,30 +41,21 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    // 更新密碼
-    @PutMapping("update-password/{id}")
-    public ResponseEntity<String> updatePassword(@PathVariable String id,
-            @RequestBody Map<String, String> requestBody) {
-        String newPassword = requestBody.get("newPassword");
-        boolean update = userService.updatePassword(id, newPassword);
-        if (update) {
-            return ResponseEntity.ok("用戶密碼更新成功");
+    @PostMapping("/update-password")
+    public ResponseEntity<String> updatePassword(@RequestBody Map<String, String> passwordData) {
+        String userId = passwordData.get("userId");
+        String oldPassword = passwordData.get("oldPassword");
+        String newPassword = passwordData.get("newPassword");
+
+        // 調用 Service 層來進行更新
+        String result = userService.updatePassword(userId, oldPassword, newPassword);
+        
+        if ("success".equals(result)) {
+            return ResponseEntity.ok("密碼更新成功");
+        } else if ("incorrect".equals(result)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("舊密碼不正確");
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("用戶密碼更新失敗");
-        }
-    }
-
-    // 密碼驗證接口
-    @GetMapping("/verify-password/{id}")
-    public ResponseEntity<String> getPassword(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
-
-        String rawPassword = requestBody.get("password");
-        boolean isPasswordCorrect = userService.verifyPassword(id, rawPassword);
-
-        if (isPasswordCorrect) {
-            return ResponseEntity.ok("密碼正確");
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("密碼不正確");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("用戶不存在");
         }
     }
 

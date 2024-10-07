@@ -52,28 +52,23 @@ public class UserService {
     }
 
     // 密碼
-    public boolean updatePassword(String id, String newPassword) {
-        Optional<User> userOptional = userRepository.findById(id);
+    public String updatePassword(String userId, String oldPassword, String newPassword) {
+        // 根據 userId 查找用戶
+        Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            String encodedPassword = passwordEncoder.encode(newPassword);
-            user.setPassword(encodedPassword);
-            userRepository.save(user);
-            return true;
-        }
-        return false;
-    }
 
-    // 通過用戶 ID 獲取密碼
-    public boolean verifyPassword(String id, String rawPassword) {
-        Optional<User> userOptional = userRepository.findById(id);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-    
-            // 使用 PasswordEncoder 來比對明文密碼與存儲的加密密碼
-            return passwordEncoder.matches(rawPassword, user.getPassword());
+            // 使用 passwordEncoder 檢查舊密碼是否匹配
+            if (passwordEncoder.matches(oldPassword, user.getPassword())) {
+                // 如果舊密碼正確，更新新密碼
+                user.setPassword(passwordEncoder.encode(newPassword));
+                userRepository.save(user);
+                return "success";
+            } else {
+                return "incorrect"; // 舊密碼不正確
+            }
         }
-        return false; // 如果用戶不存在或密碼不匹配，返回 false
+        return "not_found"; // 用戶不存在
     }
     
 
