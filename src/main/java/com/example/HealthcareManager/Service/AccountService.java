@@ -159,7 +159,6 @@ public class AccountService {
         }
     }
 
-
     public ResponseEntity<String> registerUser(User user) {
 
         if (accountRepository.findByUsername(user.getUsername()).isPresent()) {
