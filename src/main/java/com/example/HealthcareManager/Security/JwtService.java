@@ -35,10 +35,23 @@ public class JwtService {
                 .collect(Collectors.toList()));
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(id) 
+                .setSubject(id)
                 .setIssuedAt(new Date())
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    // 驗證 JWT 是否使用正確的 secret key
+    public boolean isTokenValid(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .build()
+                    .parseClaimsJws(token); // 驗證簽名
+            return true; // 簽名有效
+        } catch (Exception e) {
+            return false; // 簽名無效
+        }
     }
 
     public String extractId(String token) {
