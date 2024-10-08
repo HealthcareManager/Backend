@@ -1,7 +1,5 @@
 package com.example.HealthcareManager.Service;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -11,7 +9,6 @@ import com.example.HealthcareManager.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UserService {
