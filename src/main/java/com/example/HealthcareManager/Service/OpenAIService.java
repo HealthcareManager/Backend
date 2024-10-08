@@ -66,16 +66,14 @@ public class OpenAIService {
 
             // 獲取最近2條運動紀錄
             Pageable exercisePageable = PageRequest.of(0, 2);
-            List<ExerciseLogDTO> exerciseDataList = exerciseLogDTORepository.findExerciseLogDTOByUserId(userId,
-                    exercisePageable);
+            List<ExerciseLogDTO> exerciseDataList = exerciseLogDTORepository.findExerciseLogDTOByUserId(userId, exercisePageable);
 
             // 獲取使用者習慣
             UserHabitDTO userHabit = userHabitDTORepository.findUserHabitDTObyUserId(userId);
 
             // 獲取最近10條對話紀錄
             Pageable conversationPageable = PageRequest.of(0, 10);
-            List<AIConversationDTO> recentConversations = aiConversationDTORepository.AIConversationHistory(userId,
-                    conversationPageable);
+            List<AIConversationDTO> recentConversations = aiConversationDTORepository.AIConversationHistory(userId, conversationPageable);
 
             // 使用 ObjectMapper 來構建健康數據 JSON
             ArrayNode healthDataArray = mapper.createArrayNode();
@@ -98,12 +96,12 @@ public class OpenAIService {
                 exerciseLogNode.put("duration", exerciseLog.getDuration());
                 exerciseLogNode.put("caloriesBurned", exerciseLog.getCaloriesBurned());
                 exerciseLogNode.put("kilometers", exerciseLog.getKilometers());
-                exerciseLogNode.put("createdAt",
-                        exerciseLog.getCreatedAt() != null ? exerciseLog.getCreatedAt().toString() : null);
+                exerciseLogNode.put("createdAt", exerciseLog.getCreatedAt() != null ? exerciseLog.getCreatedAt().toString() : null);
                 exerciseDataArray.add(exerciseLogNode);
             }
+
             // 將最近的對話紀錄添加到消息中
-            ArrayNode messagesArray = mapper.createArrayNode(); // 使用 ArrayNode 替代
+            ArrayNode messagesArray = mapper.createArrayNode();
             for (AIConversationDTO conversation : recentConversations) {
                 ObjectNode previousUserMessage = mapper.createObjectNode();
                 previousUserMessage.put("role", "user");
@@ -125,20 +123,23 @@ public class OpenAIService {
             // 系統信息
             ObjectNode systemMessage = mapper.createObjectNode();
             systemMessage.put("role", "system");
-            systemMessage.put("content", "你是一位健康管理助理，你的任務是根據用戶的健康數據、運動紀錄以及以前的對話紀錄來提供健康建議。" +
-                "請根據所有的資料來特製回答，並避免重複以前的建議。" +
-                "你的回答應限制在250字以內，並根據使用者的健康情況提供精準的建議。若使用者問非健康問題，請回應‘我無法回答你的問題’。" +
-                "若有必要，請提出是否需要就醫的建議，並提供健康計畫和鼓勵。請使用繁體中文回應。");
+            systemMessage.put("content", "你是一位健康管理助理，你的任務是根據用戶的健康數據、運動紀錄以及以前的對話紀錄來提供健康建議。請根據所有的資料來特製回答，並避免重複以前的建議。你的回答應限制在80字以內，並根據使用者的健康情況提供精準的建議。若使用者問非健康問題，請回應‘我無法回答你的問題’。若有必要，請提出是否需要就醫的建議，並提供健康計畫和鼓勵。請使用繁體中文回應。");
             messagesNode.add(systemMessage);
+
+            // 處理身高和體重
+            String height = (userHabit != null && userHabit.getHeight() != null) ? userHabit.getHeight().toString() : "無資料";
+            String weight = (userHabit != null && userHabit.getWeight() != null) ? userHabit.getWeight().toString() : "無資料";
+            String gender = (userHabit != null && userHabit.getGender() != null) ? userHabit.getGender() : "無資料";
+            String dateOfBirth = (userHabit != null && userHabit.getDateOfBirth() != null) ? userHabit.getDateOfBirth().toString() : "無資料";
 
             // 用戶消息
             ObjectNode userMessage = mapper.createObjectNode();
             userMessage.put("role", "user");
-            userMessage.put("previous coversation", messagesArray.toString());
+            userMessage.put("previous conversation", messagesArray.toString());
             userMessage.put("content", "以下是我的健康數據：" + healthDataArray.toString() +
-                    "，身高: " + userHabit.getHeight() + "，性別: " + userHabit.getGender() +
-                    "，生日: " + userHabit.getDateOfBirth() + "。我的運動數據：" + exerciseDataArray.toString() +
-                    "。請根據這些資料提供健康計畫與建議。");
+                    "，身高: " + height + "，體重: " + weight + "，性別: " + gender +
+                    "，生日: " + dateOfBirth + "。我的運動數據：" + exerciseDataArray.toString() +
+                    "。我的問題是：" + question + "。請根據這些資料提供健康計畫與建議。");
             messagesNode.add(userMessage);
 
             requestBodyNode.set("messages", messagesNode);
@@ -153,27 +154,41 @@ public class OpenAIService {
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
                     .build();
 
+            // 發送請求並處理回應
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            // 使用 Jackson 來解析 JSON 回應
-            Map<String, Object> responseMap = mapper.readValue(response.body(), Map.class);
+            // 打印回應的狀態碼和內容
+            System.out.println("Response Status Code: " + response.statusCode());
+            System.out.println("Response Body: " + response.body());
 
+            // 使用 Jackson 解析回應的 JSON
+            Map<String, Object> responseMap = mapper.readValue(response.body(), Map.class);
             List<Map<String, Object>> choices = (List<Map<String, Object>>) responseMap.get("choices");
+
             if (choices == null || choices.isEmpty()) {
                 throw new RuntimeException("No choices available in the response.");
             }
+
             String responseContent = (String) ((Map<String, Object>) choices.get(0).get("message")).get("content");
 
-            System.out.println("--------------" +responseContent+ "--------------" );
+            // 打印 AI 回應
+            System.out.println("--------------" + responseContent + "--------------");
+
             responseJson.put("answer", responseContent);
 
             // 記錄對話紀錄
-            AIConversation aiConversation = new AIConversation(null, new User(userId), question, responseContent,
-                    LocalDateTime.now());
+            AIConversation aiConversation = new AIConversation(null, new User(userId), question, responseContent, LocalDateTime.now());
             aIConversationRepository.save(aiConversation);
+
         } catch (Exception e) {
+            // 捕捉例外，並印出詳細錯誤訊息
+            e.printStackTrace();
+
+            // 保持現有的錯誤回應
             responseJson.put("answer", "AI無法回應");
         }
+
         return responseJson;
     }
 }
+
