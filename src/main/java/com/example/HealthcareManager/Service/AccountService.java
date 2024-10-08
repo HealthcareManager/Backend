@@ -83,6 +83,7 @@ public class AccountService {
                     // 如果用户不存在，则新增用户
                     User newUser = new User();
                     newUser.setId(userId);
+                    newUser.setRole("USER");
                     // newUser.setEmail((String) userInfo.get("email")); // 假设用户信息中有 email 字段
                     newUser.setUsername((String) userInfo.get("displayName")); // 假设用户信息中有 name 字段
                     newUser.setImagelink(((String) userInfo.get("pictureUrl")));
@@ -134,7 +135,7 @@ public class AccountService {
                 jwtToken = jwtService.generateToken(existingUser.get().getId(), userDetails);
                 return Optional.of(new UserResponse(existingUser.get(), jwtToken));
             } else {
-                User newUser = new User(userId, name, email);
+                User newUser = new User(userId, name, email, "USER");
                 accountRepository.save(newUser);
 
                 // 生成 JWT token
@@ -171,7 +172,7 @@ public class AccountService {
         String jwtToken;
         if (!existingUser.isPresent()) {
             // 创建新用户
-            User newUser = new User(facebookId, name, email); // 使用 username
+            User newUser = new User(facebookId, name, email, "USER"); // 使用 username
             accountRepository.save(newUser);
             CustomUserDetails userDetails = new CustomUserDetails(newUser);
             jwtToken = jwtService.generateToken(newUser.getId(), userDetails);

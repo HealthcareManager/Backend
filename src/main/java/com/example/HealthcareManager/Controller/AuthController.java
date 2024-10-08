@@ -87,7 +87,7 @@ public class AuthController {
 
     @PostMapping("/facebook-login")
     public ResponseEntity<?> facebookLogin(@RequestBody String accessToken) {
-        System.out.println("accessToken at fblogin is: " + accessToken);
+        System.out.println("--------------- accessToken at fblogin is: " + accessToken);
         try {
             Optional<UserResponse> userResponseOpt = accountService.verifyFacebookToken(accessToken);
             if (userResponseOpt.isPresent()) {
@@ -99,12 +99,9 @@ public class AuthController {
                         " Username： " + userInfo.getUsername() +
                         " Email： " + userInfo.getEmail());
 
-                // 返回包含 User 和 JWT token 的響應
-                Map<String, Object> responseBody = new HashMap<>();
-                responseBody.put("user", userInfo);
-                responseBody.put("jwtToken", jwtToken);
+                UserResponse userResponseList = new UserResponse(userInfo.getId(), userInfo.getUsername(), userInfo.getImagelink(), jwtToken);
 
-                return ResponseEntity.ok(responseBody);
+            return ResponseEntity.ok(userResponseList);
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Facebook token or user not found.");
             }
@@ -114,8 +111,9 @@ public class AuthController {
     }
 
     @PostMapping("/line-callback")
-    public ResponseEntity<Map<String, Object>> lineCallback(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<UserResponse> lineCallback(@RequestBody Map<String, String> requestBody) {
         String code = requestBody.get("code"); // 从请求体中获取 "code"
+        System.out.println("------------------"+code);
 
         // 使用认证码交换访问令牌并获取用户信息
         Optional<UserResponse> userInfoResponse = accountService.fetchUserInfoWithAccessToken(code);
@@ -125,11 +123,10 @@ public class AuthController {
             String jwtToken = userResponse.getJwtToken(); // 获取 JWT token
 
             // 创建返回的响应体
-            Map<String, Object> responseBody = new HashMap<>();
-            responseBody.put("user", new User(user.getId(), user.getUsername(), user.getImagelink()));
-            responseBody.put("jwtToken", jwtToken); // 返回 JWT token
 
-            return ResponseEntity.ok(responseBody);
+            UserResponse userResponseList = new UserResponse(user.getId(), user.getUsername(), user.getImagelink(), jwtToken);
+
+            return ResponseEntity.ok(userResponseList);
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
