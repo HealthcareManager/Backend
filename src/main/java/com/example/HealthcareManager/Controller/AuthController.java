@@ -112,7 +112,7 @@ public class AuthController {
     }
 
     @PostMapping("/line-callback")
-    public ResponseEntity<User> lineCallback(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<UserResponse> lineCallback(@RequestBody Map<String, String> requestBody) {
         String code = requestBody.get("code"); // 从请求体中获取 "code"
 
         // 使用认证码交换访问令牌并获取用户信息
