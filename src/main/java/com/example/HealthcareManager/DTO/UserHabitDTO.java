@@ -4,8 +4,8 @@ import java.time.LocalDate;
 
 public class UserHabitDTO {
     private String id;
-    private double weight;
-    private double height;
+    private Double weight;
+    private Double height;
     private String gender;
     private LocalDate dateOfBirth;
     private boolean alcohol;
@@ -13,7 +13,7 @@ public class UserHabitDTO {
     private boolean areca;
 
     
-    public UserHabitDTO(String id, double weight, double height, String gender, LocalDate dateOfBirth, boolean alcohol,
+    public UserHabitDTO(String id, Double weight, Double height, String gender, LocalDate dateOfBirth, boolean alcohol,
             boolean cigarette, boolean areca) {
         this.id = id;
         this.weight = weight;
@@ -34,19 +34,19 @@ public class UserHabitDTO {
         this.id = id;
     }
 
-    public double getWeight() {
+    public Double getWeight() {
         return weight;
     }
 
-    public void setWeight(double weight) {
+    public void setWeight(Double weight) {
         this.weight = weight;
     }
 
-    public double getHeight() {
+    public Double getHeight() {
         return height;
     }
 
-    public void setHeight(double height) {
+    public void setHeight(Double height) {
         this.height = height;
     }
 

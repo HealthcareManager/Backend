@@ -62,6 +62,13 @@ public class User {
         this.email = email.orElse(null);
     }
 
+	public User(String userId, String name, String email, String role) {
+        this.id = userId;
+        this.username = name;
+        this.email = email;
+        this.role = role;
+    }
+
 	public String getPhoneNumber() {
 		return phoneNumber;
 	}

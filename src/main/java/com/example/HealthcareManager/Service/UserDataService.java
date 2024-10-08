@@ -93,11 +93,17 @@ public class UserDataService {
             userDataMap.put("username", user.getUsername());
             userDataMap.put("password", user.getPassword());
             userDataMap.put("phoneNumber", user.getPhoneNumber());
-            
+    
+            // 檢查 dateOfBirth 是否為 null
             LocalDate dateOfBirth = user.getDateOfBirth();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            userDataMap.put("dateOfBirth", dateOfBirth.format(formatter));
-            
+            if (dateOfBirth != null) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                userDataMap.put("dateOfBirth", dateOfBirth.format(formatter));
+            } else {
+                // 如果 dateOfBirth 為 null，則回傳空字串或其他預設值
+                userDataMap.put("dateOfBirth", "");
+            }
+    
             userDataMap.put("gender", user.getGender());
             userDataMap.put("role", user.getRole());
     
@@ -107,5 +113,6 @@ public class UserDataService {
     
         return allUserDataMap;
     }
+    
     
 }

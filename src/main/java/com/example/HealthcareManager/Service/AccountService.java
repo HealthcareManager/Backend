@@ -17,6 +17,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.HealthcareManager.DTO.UserResponse;
 import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
 import com.example.HealthcareManager.Security.CustomUserDetails;
@@ -51,12 +52,13 @@ public class AccountService {
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final String Google_CLIENT_ID = "1049293083717-ug9kug6f81n4tc51uahp288eeo0rfc8l.apps.googleusercontent.com"; // 替换为您的 Google
     private static final String LINE_USER_INFO_URL = "https://api.line.me/v2/profile";
+
     // 移除 @Autowired 和構造函數中的 User 注入
     public AccountService(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
-    
-    public Optional<User> fetchUserInfoWithAccessToken(String accessToken) {
+
+    public Optional<UserResponse> fetchUserInfoWithAccessToken(String accessToken) {
         RestTemplate restTemplate = new RestTemplate();
 
         if (accessToken != null) {
@@ -64,9 +66,10 @@ public class AccountService {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(accessToken);
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            
+
             // 发送 GET 请求以获取用户信息
-            ResponseEntity<Map> userInfoResponse = restTemplate.exchange(LINE_USER_INFO_URL, HttpMethod.GET, entity, Map.class);
+            ResponseEntity<Map> userInfoResponse = restTemplate.exchange(LINE_USER_INFO_URL, HttpMethod.GET, entity,
+                    Map.class);
             Map<String, Object> userInfo = userInfoResponse.getBody();
             System.out.println("userInfo is " + userInfo);
 
@@ -79,13 +82,17 @@ public class AccountService {
                     // 如果用户不存在，则新增用户
                     User newUser = new User();
                     newUser.setId(userId);
-                    //newUser.setEmail((String) userInfo.get("email")); // 假设用户信息中有 email 字段
+                    newUser.setRole("USER");
+                    // newUser.setEmail((String) userInfo.get("email")); // 假设用户信息中有 email 字段
                     newUser.setUsername((String) userInfo.get("displayName")); // 假设用户信息中有 name 字段
-                    newUser.setImagelink(((String) userInfo.get("pictureUrl")));;
+                    newUser.setImagelink(((String) userInfo.get("pictureUrl")));
+                    ;
                     System.out.println("newUser is " + newUser);
 
                     accountRepository.save(newUser);
-                    return Optional.of(newUser); // 返回新创建的用户
+                    CustomUserDetails userDetails = new CustomUserDetails(newUser);
+                jwtToken = jwtService.generateToken(newUser.getId(), userDetails);
+                return Optional.of(new UserResponse(newUser, jwtToken));
                 }
                 User user = existingUser.get();
                 System.out.println("User ID: " + user.getId());
@@ -93,13 +100,15 @@ public class AccountService {
                 System.out.println("Email: " + user.getEmail());
                 System.out.println("Image Link: " + user.getImagelink());
                 System.out.println("existingUser is " + existingUser);
-                return existingUser; // 如果用户存在，返回现有用户
+                CustomUserDetails userDetails = new CustomUserDetails(existingUser.get());
+                jwtToken = jwtService.generateToken(existingUser.get().getId(), userDetails);
+                return Optional.of(new UserResponse(existingUser.get(), jwtToken));
             }
         }
         return Optional.empty(); // 如果访问令牌为空，返回空的 Optional
     }
 
-    public Optional<User> verifyGoogleToken(String idTokenString)
+    public Optional<UserResponse> verifyGoogleToken(String idTokenString)
             throws GeneralSecurityException, IOException, java.io.IOException {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(GoogleNetHttpTransport.newTrustedTransport(),
                 GsonFactory.getDefaultInstance())
@@ -117,23 +126,31 @@ public class AccountService {
             // 检查用户是否已注册
             Optional<User> existingUser = accountRepository.findByEmail(email);
             System.out.println("existingUser is " + existingUser);
-            if (existingUser.isEmpty()) {
-                // 用户未注册，创建新用户
-                User newUser = new User(userId, name, email);
-                accountRepository.save(newUser); // 保存到数据库
-                return Optional.of(newUser);
+
+            String jwtToken; // 定義jwtToken變數
+
+            if (existingUser.isPresent()) {
+                CustomUserDetails userDetails = new CustomUserDetails(existingUser.get());
+                jwtToken = jwtService.generateToken(existingUser.get().getId(), userDetails);
+                return Optional.of(new UserResponse(existingUser.get(), jwtToken));
             } else {
-                // 用户已注册，直接返回该用户
-                return existingUser;
+                User newUser = new User(userId, name, email, "USER");
+                accountRepository.save(newUser);
+
+                // 生成 JWT token
+                CustomUserDetails userDetails = new CustomUserDetails(newUser);
+                jwtToken = jwtService.generateToken(newUser.getId(), userDetails);
+                return Optional.of(new UserResponse(newUser, jwtToken));
             }
         } else {
             throw new IOException("Invalid ID token.");
         }
     }
-    
-    public Optional<User> verifyFacebookToken(String idTokenString)
+
+    public Optional<UserResponse> verifyFacebookToken(String idTokenString)
             throws GeneralSecurityException, IOException, java.io.IOException {
-        String url = String.format("https://graph.facebook.com/me?access_token=%s&fields=id,name,email", idTokenString.replace("\"", ""));
+        String url = String.format("https://graph.facebook.com/me?access_token=%s&fields=id,name,email",
+                idTokenString.replace("\"", ""));
         System.out.println("url is " + url);
 
         RestTemplate restTemplate = new RestTemplate();
@@ -142,7 +159,8 @@ public class AccountService {
 
         // 将返回结果转换为 Map，以便获取特定字段
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> userMap = objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> userMap = objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {
+        });
 
         // 提取字段
         String facebookId = (String) userMap.get("id");
@@ -150,26 +168,32 @@ public class AccountService {
         String email = (String) userMap.get("email");
 
         Optional<User> existingUser = accountRepository.findById(facebookId);
+        String jwtToken;
         if (!existingUser.isPresent()) {
             // 创建新用户
-            User newUser = new User(facebookId, name, email); // 使用 username
+            User newUser = new User(facebookId, name, email, "USER"); // 使用 username
             accountRepository.save(newUser);
-            return Optional.of(newUser);
+            CustomUserDetails userDetails = new CustomUserDetails(newUser);
+            jwtToken = jwtService.generateToken(newUser.getId(), userDetails);
+            return Optional.of(new UserResponse(newUser, jwtToken));
         } else {
             // 更新用户资料（如果需要）
             existingUser.get().setUsername(name);
             existingUser.get().setEmail(email);
             accountRepository.save(existingUser.get());
-            return existingUser;
+            CustomUserDetails userDetails = new CustomUserDetails(existingUser.get());
+            jwtToken = jwtService.generateToken(existingUser.get().getId(), userDetails);
+            return Optional.of(new UserResponse(existingUser.get(), jwtToken));
         }
     }
 
     private final PasswordEncoder passwordEncoder;
+
     public ResponseEntity<String> registerUser(User user) {
 
         if (accountRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("使用者名稱已被使用!");
-        } else if(accountRepository.findByEmail(user.getEmail()).isPresent()){
+        } else if (accountRepository.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email名稱已被使用!");
         }
 
@@ -180,7 +204,7 @@ public class AccountService {
             user.setAccountLocked(false); // 初始化帳戶鎖定狀態
             user.setCreatedAt(LocalDateTime.now()); // 設置創建時間
             user.setEmail(user.getEmail());
-            user.setPassword(user.getPassword()); 
+            user.setPassword(user.getPassword());
             user.setPassword(passwordEncoder.encode(user.getPassword())); // 加密密码
             user.setDateOfBirth(user.getDateOfBirth());
             user.setHeight(user.getHeight());
@@ -199,16 +223,14 @@ public class AccountService {
 
     public ResponseEntity<Map<String, String>> login(User user) {
 
-         try {
+        try {
             authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    user.getUsername(),
-                    user.getPassword()
-                )
-            );
+                    new UsernamePasswordAuthenticationToken(
+                            user.getUsername(),
+                            user.getPassword()));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(Map.of("message", "Failed Login")); // 返回錯誤信息和錯誤次數
+                    .body(Map.of("message", "Failed Login")); // 返回錯誤信息和錯誤次數
         }
         if (checkAccountLocked(user.getUsername())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -250,7 +272,7 @@ public class AccountService {
     public String generateNumericId() {
         return UUID.randomUUID().toString().replace("-", "");
     }
-    
+
     private String decodeUnicode(String unicode) {
         StringBuilder string = new StringBuilder();
         String[] unicodeArr = unicode.split("\\\\u");
@@ -268,7 +290,7 @@ public class AccountService {
 
     private Map<String, String> createLoginResponse(User user) {
         User userdetail = accountRepository.findById(user.getId())
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         CustomUserDetails userDetails = new CustomUserDetails(userdetail);
         Map<String, String> responseBody = new HashMap<>();
