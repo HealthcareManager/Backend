@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.HealthcareManager.DTO.UserResponse;
 import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
 import com.example.HealthcareManager.Security.JwtService;
@@ -60,12 +61,22 @@ public class AuthController {
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> tokenData) {
         String idToken = tokenData.get("idToken");
         try {
-            Optional<User> user = accountService.verifyGoogleToken(idToken);
-            if (user.isPresent()) {
-                User userInfo = user.get();
-                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： "
-                        + userInfo.getUsername() + " Email： " + userInfo.getEmail());
-                return ResponseEntity.ok(new User(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail()));
+            Optional<UserResponse> userResponseOpt = accountService.verifyGoogleToken(idToken);
+            if (userResponseOpt.isPresent()) {
+                UserResponse userResponse = userResponseOpt.get();
+                User userInfo = userResponse.getUser(); // 獲取 User 對象
+                String jwtToken = userResponse.getJwtToken(); // 獲取 JWT token
+
+                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() +
+                        " Username： " + userInfo.getUsername() +
+                        " Email： " + userInfo.getEmail());
+
+                // 返回包含 User 和 JWT token 的響應
+                Map<String, Object> responseBody = new HashMap<>();
+                responseBody.put("user", userInfo);
+                responseBody.put("jwtToken", jwtToken);
+
+                return ResponseEntity.ok(responseBody);
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
             }
@@ -76,33 +87,46 @@ public class AuthController {
 
     @PostMapping("/facebook-login")
     public ResponseEntity<?> facebookLogin(@RequestBody String accessToken) {
-        System.out.println("accessToken at fblogin is" + accessToken);
+        System.out.println("--------------- accessToken at fblogin is: " + accessToken);
         try {
-            Optional<User> user = accountService.verifyFacebookToken(accessToken);
-            if (user.isPresent()) {
-                User userInfo = user.get();
-                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() + " Username： "
-                        + userInfo.getUsername() + " Email： " + userInfo.getEmail());
-                return ResponseEntity.ok(new User(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail()));
+            Optional<UserResponse> userResponseOpt = accountService.verifyFacebookToken(accessToken);
+            if (userResponseOpt.isPresent()) {
+                UserResponse userResponse = userResponseOpt.get();
+                User userInfo = userResponse.getUser(); // 獲取 User 對象
+                String jwtToken = userResponse.getJwtToken(); // 獲取 JWT token
+
+                System.out.println("ResponseEntity to app... ID：" + userInfo.getId() +
+                        " Username： " + userInfo.getUsername() +
+                        " Email： " + userInfo.getEmail());
+
+                UserResponse userResponseList = new UserResponse(userInfo.getId(), userInfo.getUsername(), userInfo.getImagelink(), jwtToken);
+
+            return ResponseEntity.ok(userResponseList);
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Facebook token or user not found.");
             }
         } catch (GeneralSecurityException | IOException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token: " + e.getMessage());
         }
-
+        
     }
 
     @PostMapping("/line-callback")
     public ResponseEntity<User> lineCallback(@RequestBody Map<String, String> requestBody) {
         String code = requestBody.get("code"); // 从请求体中获取 "code"
 
-        // 使用认证码交换访问令牌
-        Optional<User> userInfoResponse = accountService.fetchUserInfoWithAccessToken(code);
+        // 使用认证码交换访问令牌并获取用户信息
+        Optional<UserResponse> userInfoResponse = accountService.fetchUserInfoWithAccessToken(code);
         if (userInfoResponse.isPresent()) {
-            User user = userInfoResponse.get();
-            User userResponse = new User(user.getId(), user.getUsername(), user.getImagelink());
-            return ResponseEntity.ok(userResponse);
+            UserResponse userResponse = userInfoResponse.get();
+            User user = userResponse.getUser(); // 获取 User 对象
+            String jwtToken = userResponse.getJwtToken(); // 获取 JWT token
+
+            // 创建返回的响应体
+
+            UserResponse userResponseList = new UserResponse(user.getId(), user.getUsername(), user.getImagelink(), jwtToken);
+
+            return ResponseEntity.ok(userResponseList);
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
@@ -130,18 +154,18 @@ public class AuthController {
         // return "test";
         // }
 
-    String userId;
-    if (authentication.getPrincipal() instanceof UserDetails) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        userId = userDetails.getUsername(); // 获取用户 ID
-        System.out.println(userId);
-    } else if (authentication.getPrincipal() instanceof String) {
-        userId = (String) authentication.getPrincipal(); // 直接获取用户名
-    } else {
-        Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("message", "無法識別身份驗證對象");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
-    }
+        String userId;
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            userId = userDetails.getUsername(); // 获取用户 ID
+            System.out.println(userId);
+        } else if (authentication.getPrincipal() instanceof String) {
+            userId = (String) authentication.getPrincipal(); // 直接获取用户名
+        } else {
+            Map<String, String> responseBody = new HashMap<>();
+            responseBody.put("message", "無法識別身份驗證對象");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+        }
 
         Optional<User> optionalUser = accountRepository.findById(userId);
         if (optionalUser.isPresent()) {
