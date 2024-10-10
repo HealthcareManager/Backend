@@ -174,11 +174,13 @@ public class OpenAIService {
             // 打印 AI 回應
             System.out.println("--------------" + responseContent + "--------------");
 
-            responseJson.put("answer", responseContent);
+            System.out.println("Response Content Length: " + responseContent.length());
+            System.out.println("Response Content: " + responseContent);
 
             // 記錄對話紀錄
             AIConversation aiConversation = new AIConversation(null, new User(userId), question, responseContent, LocalDateTime.now());
             aIConversationRepository.save(aiConversation);
+            responseJson.put("answer", responseContent);
 
         } catch (Exception e) {
             // 捕捉例外，並印出詳細錯誤訊息
