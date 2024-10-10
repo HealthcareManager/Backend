@@ -3,6 +3,7 @@ package com.example.HealthcareManager.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -54,6 +55,27 @@ public class AdminService {
         System.out.println(userdata);
         
         return userdata; 
+    }
+
+    public Map<String, String> updateUserRole(String userId, String role){
+
+        Map<String, String> response = new HashMap<>();
+
+        Optional<String> originRole = accountRepository.getRoleByUserId(userId);
+        if (originRole.isEmpty()) {
+            response.put("message", "User not found");
+            return response;
+        }
+
+        User user = accountRepository.findById(userId)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        user.setRole(role);
+        accountRepository.save(user);
+        
+
+        response.put("message", "successful update!");
+        return response;
     }
 }
 
