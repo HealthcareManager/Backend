@@ -104,12 +104,12 @@ public class AuthController {
         } catch (GeneralSecurityException | IOException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token: " + e.getMessage());
         }
+        
     }
 
     @PostMapping("/line-callback")
     public ResponseEntity<UserResponse> lineCallback(@RequestBody Map<String, String> requestBody) {
         String code = requestBody.get("code"); // 从请求体中获取 "code"
-        System.out.println("------------------"+code);
 
         // 使用认证码交换访问令牌并获取用户信息
         Optional<UserResponse> userInfoResponse = accountService.fetchUserInfoWithAccessToken(code);
@@ -173,8 +173,8 @@ public class AuthController {
             responseBody.put("email", user.getEmail());
             responseBody.put("password", user.getPassword());
             responseBody.put("gender", user.getGender());
-            responseBody.put("height", user.getHeight().toString());
-            responseBody.put("weight", user.getWeight().toString());
+            responseBody.put("height", user.getHeight() != null ? user.getHeight().toString() : "");
+            responseBody.put("weight", user.getWeight() != null ? user.getWeight().toString() : "");
             responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
             return ResponseEntity.ok(responseBody);
         } else {

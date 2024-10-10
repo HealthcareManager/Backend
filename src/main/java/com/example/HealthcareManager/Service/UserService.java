@@ -1,7 +1,5 @@
 package com.example.HealthcareManager.Service;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -9,14 +7,21 @@ import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     // 上傳圖片
     public void saveImagePath(String id, String imagePath) {
@@ -44,26 +49,25 @@ public class UserService {
     }
 
     // 密碼
-    public boolean updatePassword(String id, String newPassword) {
-        Optional<User> userOptional = userRepository.findById(id);
+    public String updatePassword(String userId, String oldPassword, String newPassword) {
+        // 根據 userId 查找用戶
+        Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            user.setPassword(newPassword); // 這裡應該進行加密
-            userRepository.save(user);
-            return true;
-        }
-        return false;
-    }
 
-    // 通過用戶 ID 獲取密碼
-    public String getPasswordById(String id) {
-        Optional<User> userOptional = userRepository.findById(id);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            return user.getPassword(); // 返回存儲的密碼
+            // 使用 passwordEncoder 檢查舊密碼是否匹配
+            if (passwordEncoder.matches(oldPassword, user.getPassword())) {
+                // 如果舊密碼正確，更新新密碼
+                user.setPassword(passwordEncoder.encode(newPassword));
+                userRepository.save(user);
+                return "success";
+            } else {
+                return "incorrect"; // 舊密碼不正確
+            }
         }
-        return null; // 如果用戶不存在
+        return "not_found"; // 用戶不存在
     }
+    
 
     // 性別
     public boolean updateGender(String id, String newGender) {

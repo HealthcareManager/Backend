@@ -46,8 +46,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userId;
+
+        String requestURI = request.getRequestURI();
+        System.out.println(requestURI);
+        if (requestURI.equals("/api/auth/login") || requestURI.equals("/api/auth/register") || requestURI.equals("/api/auth/google-login") || requestURI.equals("/api/auth/facebook-login") || requestURI.equals("/api/auth/line-callback")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
-            // 檢查 Authorization header 是否存在
             if (authHeader == null || authHeader.trim().isEmpty()) {
                 logger.warn("Authorization header is missing or empty");
                 filterChain.doFilter(request, response);

@@ -41,25 +41,19 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    // 更新密碼
-    @PutMapping("update-password/{id}")
-    public ResponseEntity<String> updatePassword(@PathVariable String id,
-            @RequestBody Map<String, String> requestBody) {
-        String newPassword = requestBody.get("newPassword");
-        boolean update = userService.updatePassword(id, newPassword);
-        if (update) {
-            return ResponseEntity.ok("用戶密碼更新成功");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("用戶密碼更新失敗");
-        }
-    }
+    @PostMapping("/update-password")
+    public ResponseEntity<String> updatePassword(@RequestBody Map<String, String> passwordData) {
+        String userId = passwordData.get("userId");
+        String oldPassword = passwordData.get("oldPassword");
+        String newPassword = passwordData.get("newPassword");
 
-    // 獲取用戶密碼
-    @GetMapping("/password/{id}")
-    public ResponseEntity<String> getPassword(@PathVariable String id) {
-        String password = userService.getPasswordById(id);
-        if (password != null) {
-            return ResponseEntity.ok(password); // 返回密碼
+        // 調用 Service 層來進行更新
+        String result = userService.updatePassword(userId, oldPassword, newPassword);
+        
+        if ("success".equals(result)) {
+            return ResponseEntity.ok("密碼更新成功");
+        } else if ("incorrect".equals(result)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("舊密碼不正確");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("用戶不存在");
         }
@@ -144,7 +138,9 @@ public class UserController {
             Files.write(filePath, file.getBytes());
 
             // 更新為正確的基本 URL
-            String baseUrl = "http://192.168.50.38:8080/HealthcareManager/"; // 確保這裡的端口和地址正確
+            // String baseUrl = "http://192.168.50.38:8080/HealthcareManager/"; //
+            // 確保這裡的端口和地址正確
+            String baseUrl = "http://10.0.2.2:8080/";
             String relativeImagePath = "images/" + fileName;
             String fullImageUrl = baseUrl + relativeImagePath;
 

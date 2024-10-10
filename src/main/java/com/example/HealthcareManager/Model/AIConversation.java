@@ -20,7 +20,7 @@ public class AIConversation {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-    @Column(name = "question")
+    @Column(name = "question", length=255)
     private String question;
     @Column(name = "answer")
     private String answer;
