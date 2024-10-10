@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.example.HealthcareManager.Model.HeightWeightRecord;
 import com.example.HealthcareManager.Repository.HeightWeightRecordRepository;
@@ -14,10 +15,10 @@ public class HeightWeightRecordService {
     @Autowired
     private HeightWeightRecordRepository heightWeightRecordRepository;
 
-    public boolean addUserData(String id, Double height, Double weight) {
+    public boolean addUserData(String userId, Double height, Double weight) {
 
         HeightWeightRecord newRecord = new HeightWeightRecord(
-            id,
+            userId,
             height,
             weight,
             LocalDateTime.now()
@@ -27,7 +28,8 @@ public class HeightWeightRecordService {
         return true;
     }
 
-    public HeightWeightRecord getData(String id){
-        return heightWeightRecordRepository.findById(id).orElse(null);
+    public List<HeightWeightRecord> getData(String userId) {
+        return heightWeightRecordRepository.findAllByUserId(userId);
     }
+    
 }

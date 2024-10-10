@@ -1,6 +1,8 @@
 package com.example.HealthcareManager.Model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -11,43 +13,62 @@ import java.time.LocalDateTime;
 public class HeightWeightRecord {
     
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // 自增的唯一主键
+    private Long recordId;
 
-    private double height;
-    private double weight;
+    private String userId;
+
+    private Double height;
+    private Double weight;
     private LocalDateTime date;
     
     public HeightWeightRecord() {
     }
 
-    public HeightWeightRecord(String id, double height, double weight, LocalDateTime date) {
-        this.id = id;
+    public HeightWeightRecord(Long recordId, String userId, Double height, Double weight, LocalDateTime date) {
+        this.recordId = recordId;
+        this.userId = userId;
         this.height = height;
         this.weight = weight;
         this.date = date;
     }
 
-    public String getId() {
-        return id;
+    public HeightWeightRecord(String userId, double height, double weight, LocalDateTime date) {
+        this.userId = userId;
+        this.height = height;
+        this.weight = weight;
+        this.date = date;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public Long getRecordId() {
+        return recordId;
     }
 
-    public double getHeight() {
+    public void setRecordId(Long recordId) {
+        this.recordId = recordId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public Double getHeight() {
         return height;
     }
 
-    public void setHeight(double height) {
+    public void setHeight(Double height) {
         this.height = height;
     }
 
-    public double getWeight() {
+    public Double getWeight() {
         return weight;
     }
 
-    public void setWeight(double weight) {
+    public void setWeight(Double weight) {
         this.weight = weight;
     }
 
@@ -58,6 +79,5 @@ public class HeightWeightRecord {
     public void setDate(LocalDateTime date) {
         this.date = date;
     }
-
     
 }

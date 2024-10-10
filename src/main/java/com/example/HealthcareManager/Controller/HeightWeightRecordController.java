@@ -1,7 +1,11 @@
 package com.example.HealthcareManager.Controller;
 
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,41 +19,51 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-
-
 @RestController
 @RequestMapping("/api/heightWeightRecord")
 public class HeightWeightRecordController {
-    
+
     @Autowired
     private HeightWeightRecordService heightWeightRecordService;
 
     @PutMapping("addData")
     public ResponseEntity<String> addData(@RequestBody Map<String, String> userData) {
-        String id = userData.get("userId");
+        String userId = userData.get("userId");
         Double height = Double.parseDouble(userData.get("height"));
         Double weight = Double.parseDouble(userData.get("weight"));
 
-        boolean result = heightWeightRecordService.addUserData(id, height, weight);
+        boolean result = heightWeightRecordService.addUserData(userId, height, weight);
         if (result) {
             return ResponseEntity.ok("資料上傳成功");
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("資料上傳失敗");
     }
-    
-    @PostMapping("getData/{id}")
-    public ResponseEntity<Map<String, Object>> getData(@PathVariable String id) {
-        HeightWeightRecord heightWeightRecord = heightWeightRecordService.getData(id);
-        if (heightWeightRecord != null) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("useId", heightWeightRecord.getId());
-            response.put("height", heightWeightRecord.getHeight());
-            response.put("weight", heightWeightRecord.getWeight());
-            response.put("date", heightWeightRecord.getDate());
-            return ResponseEntity.ok(response);
+
+    @PostMapping("getData/{userId}")
+    public ResponseEntity<List<Map<String, Object>>> getData(@PathVariable String userId) {
+        // 獲取所有符合條件的記錄
+        List<HeightWeightRecord> records = heightWeightRecordService.getData(userId);
+
+        if (!records.isEmpty()) {
+            List<Map<String, Object>> responseList = new ArrayList<>();
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd");
+
+            for (HeightWeightRecord record : records) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("userId", record.getUserId()); // 確保這裡使用正確的 key
+                response.put("height", record.getHeight());
+                response.put("weight", record.getWeight());
+
+                String formattedDate = record.getDate().format(formatter);
+                response.put("date", formattedDate);  // 使用格式化後的日期
+                
+                responseList.add(response);
+            }
+
+            return ResponseEntity.ok(responseList);
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
-    
 }
