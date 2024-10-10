@@ -71,12 +71,8 @@ public class AuthController {
                         " Username： " + userInfo.getUsername() +
                         " Email： " + userInfo.getEmail());
 
-                // 返回包含 User 和 JWT token 的響應
-                Map<String, Object> responseBody = new HashMap<>();
-                responseBody.put("user", userInfo);
-                responseBody.put("jwtToken", jwtToken);
-
-                return ResponseEntity.ok(responseBody);
+                UserResponse userResponseList = new UserResponse(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail(), userInfo.getImagelink(), jwtToken);
+                return ResponseEntity.ok(userResponseList);
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
             }
@@ -99,7 +95,7 @@ public class AuthController {
                         " Username： " + userInfo.getUsername() +
                         " Email： " + userInfo.getEmail());
 
-                UserResponse userResponseList = new UserResponse(userInfo.getId(), userInfo.getUsername(), userInfo.getImagelink(), jwtToken);
+                UserResponse userResponseList = new UserResponse(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail(), userInfo.getImagelink(), jwtToken);
 
             return ResponseEntity.ok(userResponseList);
             } else {
@@ -130,7 +126,7 @@ public class AuthController {
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-    }
+    } 
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody User user) {
