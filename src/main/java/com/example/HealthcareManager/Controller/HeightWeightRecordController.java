@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.HealthcareManager.Model.HeightWeightRecord;
 import com.example.HealthcareManager.Service.HeightWeightRecordService;
+import com.example.HealthcareManager.Service.UserService;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,6 +28,9 @@ public class HeightWeightRecordController {
     @Autowired
     private HeightWeightRecordService heightWeightRecordService;
 
+    @Autowired
+    private UserService userService;
+
     @PutMapping("addData")
     public ResponseEntity<String> addData(@RequestBody Map<String, String> userData) {
         String userId = userData.get("userId");
@@ -33,7 +38,9 @@ public class HeightWeightRecordController {
         Double weight = Double.parseDouble(userData.get("weight"));
 
         boolean result = heightWeightRecordService.addUserData(userId, height, weight);
-        if (result) {
+        boolean result1 = userService.updateHeight(userId, height);
+        boolean result2 = userService.updateWeight(userId, weight);
+        if (result && result1 && result2) {
             return ResponseEntity.ok("資料上傳成功");
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("資料上傳失敗");
