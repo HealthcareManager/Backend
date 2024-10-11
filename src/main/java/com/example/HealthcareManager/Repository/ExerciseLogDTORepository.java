@@ -12,8 +12,8 @@ import org.springframework.data.domain.Pageable;
 
 public interface ExerciseLogDTORepository extends JpaRepository<ExerciseLog, Long> {
 
-    @Query("SELECT new com.example.HealthcareManager.DTO.ExerciseLogDTO(u.id, e.exerciseType, e.duration, e.caloriesBurned, e.kilometers, e.createdAt) " +
-           "FROM User u JOIN ExerciseLog e ON u.id = e.user.id " +
+    @Query("SELECT new com.example.HealthcareManager.DTO.ExerciseLogDTO(e.id, u.id, e.exerciseType, e.duration, e.caloriesBurned, e.kilometers, e.createdAt) " +
+           "FROM ExerciseLog e JOIN e.user u " +
            "WHERE u.id = :userId " +
            "ORDER BY e.createdAt DESC")
     List<ExerciseLogDTO> findExerciseLogDTOByUserId(@Param("userId") String userId, Pageable pageable);

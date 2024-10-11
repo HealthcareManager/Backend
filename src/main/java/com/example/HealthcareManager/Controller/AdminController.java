@@ -11,7 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.HealthcareManager.Model.User;
@@ -54,6 +56,13 @@ public class AdminController {
     public ResponseEntity<Map<String, Object>> getAllUsersDataList() {
         Map<String, Object> allUsersDataList = userDataService.getAllUserDataList();
         return ResponseEntity.ok(allUsersDataList);
+    }
+
+    @PutMapping("/update/role/{userId}")
+    public ResponseEntity<Map<String, String>>updateUserRole(@PathVariable String userId, @RequestBody User user){
+        String role = user.getRole();
+        Map<String, String> newUserRole = adminService.updateUserRole(userId, role);
+        return ResponseEntity.ok(newUserRole);
     }
 
 }
