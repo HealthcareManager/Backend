@@ -24,8 +24,10 @@ import com.example.HealthcareManager.Model.Payment;
 import com.example.HealthcareManager.Model.ProductForm;
 import com.example.HealthcareManager.Model.ProductPackageForm;
 import com.example.HealthcareManager.Model.RedirectUrls;
+import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.CheckoutPaymentRequestFormRepository;
 import com.example.HealthcareManager.Repository.PaymentRepository;
+import com.example.HealthcareManager.Repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,6 +50,8 @@ public class ConsumerCheck {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @Autowired
+    private UserRepository userRepository; // 注入用戶倉庫
 
     private static final String CHANNEL_SECRET = "5b754d3c661a31399d318c968d4e5081"; // 測試用的 Channel Secret
     private static final String REQUEST_URI = "/v3/payments/request";
@@ -125,8 +129,21 @@ public class ConsumerCheck {
         if ("SUCCESS".equals(status)) {
             payment.setPaymentTime(LocalDateTime.now());
         }
+        // 先保存支付信息
+        paymentRepository.save(payment);
 
-            paymentRepository.save(payment);
+        // 如果支付成功，更新用戶角色為 VIP
+        if ("SUCCESS".equals(status)) {
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.setRole("VIP"); // 將用戶角色設置為 VIP
+                userRepository.save(user); // 保存更新
+            } else {
+                throw new IllegalArgumentException("User not found");
+            }
+        }
+        
             return true;
         }
         return false;
