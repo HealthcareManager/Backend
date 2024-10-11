@@ -176,6 +176,7 @@ public class AuthController {
             responseBody.put("height", user.getHeight() != null ? user.getHeight().toString() : "");
             responseBody.put("weight", user.getWeight() != null ? user.getWeight().toString() : "");
             responseBody.put("dateOfBirth", user.getDateOfBirth().toString());
+            responseBody.put("role", user.getRole());
             return ResponseEntity.ok(responseBody);
         } else {
             Map<String, String> responseBody = new HashMap<>();
