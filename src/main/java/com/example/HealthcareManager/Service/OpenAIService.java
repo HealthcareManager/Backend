@@ -26,6 +26,7 @@ import com.example.HealthcareManager.Repository.AIConversationRepository;
 import com.example.HealthcareManager.Repository.ExerciseLogDTORepository;
 import com.example.HealthcareManager.Repository.HealthDataDTORepository;
 import com.example.HealthcareManager.Repository.UserHabitDTORepository;
+import com.example.HealthcareManager.Repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,6 +43,9 @@ public class OpenAIService {
     private String apiKey; // OpenAI API 金鑰
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private HealthDataDTORepository healthDataDTORepository; // 健康數據資料庫
     @Autowired
     private UserHabitDTORepository userHabitDTORepository; // 使用者習慣資料庫
@@ -55,7 +59,24 @@ public class OpenAIService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> handleGeneralQuestions(String userId, String question) {
         Map<String, Object> responseJson = new HashMap<>();
+
         try {
+
+            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("使用者未找到"));
+
+            // 計算該用戶過去 24 小時內的提問數量
+            LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
+            int last24HoursQuestionCount = aIConversationRepository.countByUserAndCreatedAtAfter(user, twentyFourHoursAgo);
+
+            // 根據使用者角色設定提問次數限制
+            int questionLimit = user.getRole().equals("VIP") ? 20 : 3;
+
+            // 檢查是否超過每 24 小時提問次數限制
+            if (last24HoursQuestionCount >= questionLimit) {
+                responseJson.put("answer", "過去24小時的提問次數已達上限");
+                return responseJson;
+            }
+
             // 設置 ObjectMapper 忽略 null 值
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // 忽略所有 null 值
@@ -123,7 +144,7 @@ public class OpenAIService {
             // 系統信息
             ObjectNode systemMessage = mapper.createObjectNode();
             systemMessage.put("role", "system");
-            systemMessage.put("content", "你是一位健康管理助理，你的任務是根據用戶的健康數據、運動紀錄以及以前的對話紀錄來提供健康建議。請根據所有的資料來特製回答，並避免重複以前的建議。你的回答應限制在80字以內，並根據使用者的健康情況提供精準的建議。若使用者問非健康問題，請回應‘我無法回答你的問題’。若有必要，請提出是否需要就醫的建議，並提供健康計畫和鼓勵。請使用繁體中文回應。");
+            systemMessage.put("content", "你是一位專業的健康管理助理，你的任務是根據用戶的健康數據、運動紀錄、個人習慣和過去的對話紀錄來提供具體且個性化的健康建議。請根據所有的資料來量身定制建議，避免重複回應已分析過的健康數據或問題，若數據已被分析，則避免再次回答相關問題，但請參考過去的問題和回答，進行前後呼應的回應。你的回答應限制在80字以內，提供具體且針對性的建議，並根據使用者的健康狀況，決定是否需要提出就醫建議。若使用者問非健康相關問題，請回應「此問題超出我的工作範圍」。若發現健康數據異常，請主動提醒用戶，並建議定期檢查或聯繫醫生。提供健康計畫時，請具體到行動步驟，並以正面鼓勵語句結尾。請使用繁體中文回答。");
             messagesNode.add(systemMessage);
 
             // 處理身高和體重
@@ -174,11 +195,13 @@ public class OpenAIService {
             // 打印 AI 回應
             System.out.println("--------------" + responseContent + "--------------");
 
-            responseJson.put("answer", responseContent);
+            System.out.println("Response Content Length: " + responseContent.length());
+            System.out.println("Response Content: " + responseContent);
 
             // 記錄對話紀錄
             AIConversation aiConversation = new AIConversation(null, new User(userId), question, responseContent, LocalDateTime.now());
             aIConversationRepository.save(aiConversation);
+            responseJson.put("answer", responseContent);
 
         } catch (Exception e) {
             // 捕捉例外，並印出詳細錯誤訊息

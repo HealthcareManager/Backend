@@ -50,8 +50,8 @@ public class HealthMetricsController {
 
         // 将 HealthMetrics 转换为 UserMetricsResponse.Metric 并封装到 UserMetricsResponse
         List<UserMetricsResponse.Metric> metrics = metricsList.stream().map(metric -> {
-            DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-            String formattedDate = metric.getDate().format(formatter);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd"); // 自定义格式
+            String formattedDate = metric.getDate().format(formatter); // 使用自定义的时间格式
             return new UserMetricsResponse.Metric(
                 metric.getId(), 
                 metric.getHeartRate(), 
