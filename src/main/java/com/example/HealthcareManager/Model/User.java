@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Entity
 @Table(name = "users")
@@ -47,11 +48,19 @@ public class User {
 		this.id = id;
     }
     
+	// 第一個建構子
     public User(String userId, String name, String imagelink) {
-    	this.id = userId;
+        this.id = userId;
         this.username = name;
-        this.imagelink =imagelink;
-	}
+        this.imagelink = imagelink;
+    }
+
+    // 第二個建構子，使用不同的參數類型
+    public User(String userId, String name, Optional<String> email) {
+        this.id = userId;
+        this.username = name;
+        this.email = email.orElse(null);
+    }
 
 	public User(String userId, String name, String email, String role) {
         this.id = userId;
