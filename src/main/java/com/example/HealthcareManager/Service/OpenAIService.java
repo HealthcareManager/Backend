@@ -138,7 +138,7 @@ public class OpenAIService {
 
             // 構建請求的 JSON
             ObjectNode requestBodyNode = mapper.createObjectNode();
-            requestBodyNode.put("model", "gpt-4");
+            requestBodyNode.put("model", "gpt-4o");
             ArrayNode messagesNode = mapper.createArrayNode();
 
             // 系統信息
