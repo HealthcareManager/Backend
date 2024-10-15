@@ -9,6 +9,7 @@ public class UserResponse {
     private String Imagelink;
     private User user; // 用戶信息
     private String jwtToken; // JWT token
+    private String role;
 
     public UserResponse(User user, String jwtToken) {
         this.user = user;
@@ -22,16 +23,33 @@ public class UserResponse {
         this.jwtToken = jwtToken;
     }
 
-    public UserResponse(String id, String username, String email,String Imagelink, String jwtToken){
-        this.id = id;
+//    public UserResponse(String id, String username, String email,String Imagelink, String jwtToken){
+//        this.id = id;
+//        this.username = username;
+//        this.email = email;
+//        this.Imagelink = Imagelink;
+//        this.jwtToken = jwtToken;
+//    }
+
+
+    public UserResponse(String id, String username, String email, String Imagelink, String role, String jwtToken) {
+    	this.id = id;
         this.username = username;
         this.email = email;
         this.Imagelink = Imagelink;
         this.jwtToken = jwtToken;
-    }
+        this.role = role;
+	}
 
+	public String getRole() {
+		return role;
+	}
 
-    // Getters and Setters
+	public void setRole(String role) {
+		this.role = role;
+	}
+
+	// Getters and Setters
     public User getUser() {
         return user;
     }

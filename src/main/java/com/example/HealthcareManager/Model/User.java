@@ -40,6 +40,11 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
+    private LocalDate MembershipEndDate;
+    
+    @Column(name = "token_expiration")
+    private LocalDateTime tokenExpiration;
+    
  // 无参构造函数
     public User() {
     }
@@ -68,6 +73,22 @@ public class User {
         this.email = email;
         this.role = role;
     }
+
+	public LocalDateTime getTokenExpiration() {
+		return tokenExpiration;
+	}
+
+	public void setTokenExpiration(LocalDateTime tokenExpiration) {
+		this.tokenExpiration = tokenExpiration;
+	}
+
+	public LocalDate getMembershipEndDate() {
+		return MembershipEndDate;
+	}
+
+	public void setMembershipEndDate(LocalDate membershipEndDate) {
+		MembershipEndDate = membershipEndDate;
+	}
 
 	public String getPhoneNumber() {
 		return phoneNumber;

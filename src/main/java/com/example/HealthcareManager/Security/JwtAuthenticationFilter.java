@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
         System.out.println(requestURI);
-        if (requestURI.equals("/api/auth/login") || requestURI.equals("/api/auth/register") || requestURI.equals("/api/auth/google-login") || requestURI.equals("/api/auth/facebook-login") || requestURI.equals("/api/auth/line-callback")) {
+        if (requestURI.equals("/HealthcareManager/api/auth/login") || requestURI.equals("/HealthcareManager/api/auth/register") || requestURI.equals("/HealthcareManager/api/auth/google-login") || requestURI.equals("/HealthcareManager/api/auth/facebook-login") || requestURI.equals("/HealthcareManager/api/auth/line-callback") || requestURI.equals("/HealthcareManager/membership-status") || requestURI.equals("/HealthcareManager/api/auth/forgot-password") || requestURI.equals("/HealthcareManager/api/auth/reset-password")) {
             filterChain.doFilter(request, response);
             return;
         }

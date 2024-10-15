@@ -31,10 +31,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.HealthcareManager.DTO.UserResponse;
+import com.example.HealthcareManager.Model.PasswordResetToken;
 import com.example.HealthcareManager.Model.User;
 import com.example.HealthcareManager.Repository.AccountRepository;
 import com.example.HealthcareManager.Security.JwtService;
 import com.example.HealthcareManager.Service.AccountService;
+import com.example.HealthcareManager.Service.EmailService;
+import com.example.HealthcareManager.Service.PasswordResetTokenService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -51,6 +54,12 @@ public class AuthController {
 
     @Autowired
     JwtService jwtService;
+    
+    @Autowired
+    private EmailService emailService;
+    
+    @Autowired
+    private PasswordResetTokenService passwordResetTokenService;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
@@ -60,6 +69,7 @@ public class AuthController {
     @PostMapping("/google-login")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> tokenData) {
         String idToken = tokenData.get("idToken");
+        System.out.println("idToken is " + idToken);
         try {
             Optional<UserResponse> userResponseOpt = accountService.verifyGoogleToken(idToken);
             if (userResponseOpt.isPresent()) {
@@ -71,7 +81,8 @@ public class AuthController {
                         " Username： " + userInfo.getUsername() +
                         " Email： " + userInfo.getEmail());
 
-                UserResponse userResponseList = new UserResponse(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail(), userInfo.getImagelink(), jwtToken);
+                UserResponse userResponseList = new UserResponse(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail(), userInfo.getImagelink(), userInfo.getRole(), jwtToken);
+                System.out.println("userResponseList role is " + userInfo.getRole());
                 return ResponseEntity.ok(userResponseList);
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token or user not found.");
@@ -95,7 +106,7 @@ public class AuthController {
                         " Username： " + userInfo.getUsername() +
                         " Email： " + userInfo.getEmail());
 
-                UserResponse userResponseList = new UserResponse(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail(), userInfo.getImagelink(), jwtToken);
+                UserResponse userResponseList = new UserResponse(userInfo.getId(), userInfo.getUsername(), userInfo.getEmail(), userInfo.getImagelink(), userInfo.getRole(), jwtToken);
 
             return ResponseEntity.ok(userResponseList);
             } else {
@@ -145,11 +156,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         }
 
-        // @PostMapping("/test")
-        // public String test() {
-        // return "test";
-        // }
-
         String userId;
         if (authentication.getPrincipal() instanceof UserDetails) {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
@@ -183,6 +189,39 @@ public class AuthController {
             responseBody.put("message", "伺服器錯誤：用户不存在");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
         }
+    }
+    
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody User vo) {
+        Optional<User> existingVo = accountRepository.findByEmail(vo.getEmail());
+        System.out.println("input email is " + vo.getEmail());
+        System.out.println("findByEmail user is " + existingVo);
+        if (!existingVo.isPresent()) {
+            return ResponseEntity.badRequest().body("電子郵件不存在");
+        }
+
+        // 创建密码重置令牌并获取生成的令牌
+        String token = passwordResetTokenService.createPasswordResetTokenForUser(existingVo.get());
+
+        // 调用 emailService 的方法来发送邮件
+        emailService.sendResetPasswordEmail(existingVo.get(), token);
+
+        return ResponseEntity.ok("信件寄送成功！請確認您的電子郵件信箱");
+    }
+    
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam("token") String token, @RequestParam("newPassword") String newPassword) {
+        System.out.println("recive token is " + token + " newPassword is " +newPassword);
+    	PasswordResetToken resetToken = passwordResetTokenService.validatePasswordResetToken(token);
+        
+        if (resetToken == null) {
+            return ResponseEntity.badRequest().body("失效或過期的憑證");
+        }
+        
+        accountService.changePassword(resetToken.getVo(), newPassword);
+        passwordResetTokenService.deleteToken(resetToken);
+
+        return ResponseEntity.ok("密碼重設成功！");
     }
 
 }
