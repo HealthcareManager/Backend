@@ -27,8 +27,8 @@ public class MembershipWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         sessions.remove(session);
-        System.out.println("WebSocket 连接关闭，剩余连接数：" + sessions.size());
-        System.out.println("关闭原因：" + status.getReason());
+//        System.out.println("WebSocket 连接关闭，剩余连接数：" + sessions.size());
+//        System.out.println("关闭原因：" + status.getReason());
     }
 
     public void sendMembershipUpdate(User user) {

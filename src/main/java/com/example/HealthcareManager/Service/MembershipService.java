@@ -19,15 +19,16 @@ public class MembershipService {
     @Autowired
     private UserRepository userRepository;
 
-    @Scheduled(cron = "*/10 * * * * ?") // 每24小时执行一次检查
+    @Scheduled(cron = "*/15 * * * * ?") // 每24小时执行一次检查
     public void checkExpiredMemberships() {
         List<User> users = userRepository.findAll();
         LocalDate now = LocalDate.now();
         for (User user : users) {
         	if (user.getId().equals("115203853604921130467")) {
+        		System.out.println("找到用户: " + user.getUsername());
                 // 执行您需要的逻辑
         		if (user.getMembershipEndDate().isBefore(now) && "VIP".equals(user.getRole())) {
-        		    System.out.println("找到用户: " + user.getUsername());
+        		    System.out.println("找到過期用户: " + user.getUsername());
         		    
         		    // 将角色更新为 USER
         		    user.setRole("USER");
