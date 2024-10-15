@@ -1,6 +1,7 @@
 package com.example.HealthcareManager;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
@@ -113,40 +114,59 @@ public class ConsumerCheck {
         payment.setUserId(null); // 初始設為 null，等到支付成功後再寫入
         payment.setStatus("PENDING"); // 初始狀態設置為 "PENDING"
 
-    
         // 保存到資料庫
         paymentRepository.save(payment);
     }
-    
-    public boolean updatePaymentStatus(String orderId, String userId, String status) {
+
+    public boolean updatePaymentStatus(String orderId, String userId, String status, String productName) {
         Optional<Payment> paymentOpt = paymentRepository.findByOrderId(orderId);
         if (paymentOpt.isPresent()) {
             Payment payment = paymentOpt.get();
             payment.setUserId(userId); // 更新用戶 ID
             payment.setStatus(status); // 更新支付狀態
+            payment.setMonth(productName);
 
-        // 設置支付成功的時間，當狀態為 "SUCCESS" 時
-        if ("SUCCESS".equals(status)) {
-            payment.setPaymentTime(LocalDateTime.now());
-        }
-        // 先保存支付信息
-        paymentRepository.save(payment);
-
-        // 如果支付成功，更新用戶角色為 VIP
-        if ("SUCCESS".equals(status)) {
-            Optional<User> userOpt = userRepository.findById(userId);
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                user.setRole("VIP"); // 將用戶角色設置為 VIP
-                userRepository.save(user); // 保存更新
-            } else {
-                throw new IllegalArgumentException("User not found");
+            // 設置支付成功的時間，當狀態為 "SUCCESS" 時
+            if ("SUCCESS".equals(status)) {
+                payment.setPaymentTime(LocalDateTime.now());
             }
-        }
-        
+            // 先保存支付信息
+            paymentRepository.save(payment);
+
+            // 如果支付成功，更新用戶角色為 VIP
+            if ("SUCCESS".equals(status)) {
+                Optional<User> userOpt = userRepository.findById(userId);
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    user.setRole("VIP"); // 將用戶角色設置為 VIP
+
+                    String monthString = productName.replaceAll("[^0-9]", ""); // 提取數字
+
+                    if (!monthString.isEmpty()) { // 確保提取的字符串不為空
+                        int months = Integer.parseInt(monthString); // 提取數字並轉為整數
+
+                        if (user.getMembershipEndDate() != null) {
+                            // 獲取當前的 membership_end_date
+                            LocalDate currentEndDate = user.getMembershipEndDate();
+
+                            // 計算新的 membership_end_date
+                            LocalDate newEndDate = currentEndDate.plusMonths(months); // 在原日期上加上月份數
+                            user.setMembershipEndDate(newEndDate); // 更新用戶的會員到期日期
+                        }
+
+                    } else {
+                        throw new IllegalArgumentException("Invalid product name format: No months found.");
+                    }
+
+                    userRepository.save(user); // 保存更新
+                } else {
+                    throw new IllegalArgumentException("User not found");
+                }
+            }
+
             return true;
         }
         return false;
     }
-    
+
 }
