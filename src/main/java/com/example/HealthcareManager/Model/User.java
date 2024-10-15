@@ -39,8 +39,31 @@ public class User {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+	private LocalDate MembershipEndDate; 
     
- // 无参构造函数
+ public User(String id, String username, String email, String password, LocalDate dateOfBirth, Double height,
+			Double weight, String gender, String imagelink, String phoneNumber, String role, String verificationToken,
+			Integer loginAttempts, Boolean accountLocked, LocalDateTime createdAt, LocalDate membershipEndDate) {
+		this.id = id;
+		this.username = username;
+		this.email = email;
+		this.password = password;
+		this.dateOfBirth = dateOfBirth;
+		this.height = height;
+		this.weight = weight;
+		this.gender = gender;
+		this.imagelink = imagelink;
+		this.phoneNumber = phoneNumber;
+		this.role = role;
+		this.verificationToken = verificationToken;
+		this.loginAttempts = loginAttempts;
+		this.accountLocked = accountLocked;
+		this.createdAt = createdAt;
+		MembershipEndDate = membershipEndDate;
+	}
+
+	// 无参构造函数
     public User() {
     }
 
@@ -187,6 +210,14 @@ public class User {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+	public LocalDate getMembershipEndDate() {
+		return MembershipEndDate;
+	}
+
+	public void setMembershipEndDate(LocalDate membershipEndDate) {
+		MembershipEndDate = membershipEndDate;
 	}
 
 }
