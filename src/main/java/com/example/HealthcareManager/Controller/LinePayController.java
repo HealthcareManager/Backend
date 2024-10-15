@@ -41,8 +41,10 @@ public class LinePayController {
         String orderId = updateRequest.get("orderId");
         String userId = updateRequest.get("userId"); // 新增 userId
         String status = updateRequest.get("status");
+        String productName = updateRequest.get("name");
+        System.out.println(productName);
     
-        boolean isUpdated = service.updatePaymentStatus(orderId, userId, status); // 傳遞 userId
+        boolean isUpdated = service.updatePaymentStatus(orderId, userId, status, productName); // 傳遞 userId
         if (isUpdated) {
             return ResponseEntity.ok("支付狀態更新成功");
         } else {

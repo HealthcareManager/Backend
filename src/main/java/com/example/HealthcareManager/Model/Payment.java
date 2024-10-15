@@ -20,14 +20,24 @@ public class Payment {
     private String userId; // 可設定為null，等到支付成功後再寫入
     private String status;
     private LocalDateTime paymentTime;
+    private String month;
+
+    public String getMonth() {
+        return month;
+    }
+
+    public void setMonth(String mouth) {
+        this.month = mouth;
+    }
 
     // Constructors
     public Payment() {}
 
-    public Payment(String orderId, String userId, String status) {
+    public Payment(String orderId, String userId, String status, String month) {
         this.orderId = orderId;
         this.userId = userId;
         this.status = status;
+        this.month = month;
     }
     
     public Payment(String orderId, String userId, String status, LocalDateTime paymentTime) {

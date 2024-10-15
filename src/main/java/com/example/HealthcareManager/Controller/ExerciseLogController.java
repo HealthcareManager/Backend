@@ -75,6 +75,16 @@ public class ExerciseLogController {
         return exerciseLog.map(ResponseEntity::ok)
                           .orElse(ResponseEntity.notFound().build());  // 如果找到紀錄則返回，否則返回 404
     }
+    
+    // 根據使用者 ID 查詢該使用者所有運動紀錄
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ExerciseLog>> getExerciseLogsByUserId(@PathVariable String userId) {
+        List<ExerciseLog> exerciseLogs = exerciseLogService.getExerciseLogsByUserId(userId);
+        if (exerciseLogs.isEmpty()) {
+            return ResponseEntity.notFound().build();  // 如果沒有找到紀錄，返回 404
+        }
+        return ResponseEntity.ok(exerciseLogs);  // 如果有找到紀錄，返回 200 並附上紀錄
+    }
 
     // 根據 ID 刪除運動紀錄
     @DeleteMapping("/{id}")
