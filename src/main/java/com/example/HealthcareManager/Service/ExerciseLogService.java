@@ -34,4 +34,9 @@ public class ExerciseLogService {
     public void deleteExerciseLogById(Long id) {
         exerciseLogRepository.deleteById(id);  // 使用 deleteById 方法根據 ID 刪除資料
     }
+
+    //ID來查詢多筆運動紀錄
+    public List<ExerciseLog> getExerciseLogsByUserId(String userId) {
+        return exerciseLogRepository.findByUserId(userId); // 使用 findByUserId 查詢使用者的所有運動紀錄
+    }
 }
