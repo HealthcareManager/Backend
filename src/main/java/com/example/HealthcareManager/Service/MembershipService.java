@@ -32,6 +32,7 @@ public class MembershipService {
         		    
         		    // 将角色更新为 USER
         		    user.setRole("USER");
+        		    user.setMembershipEndDate(null);
         		    userRepository.save(user);
 
         		    // 重新获取用户状态（可选，确保持久化成功后状态一致）
