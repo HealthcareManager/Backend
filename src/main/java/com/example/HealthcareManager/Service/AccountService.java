@@ -299,4 +299,15 @@ public class AccountService {
         System.out.println("token create ：" + responseBody);
         return responseBody;
     }
+    
+    public void changePassword(User vo, String newPassword) {
+        // 通过用户名查找用户
+        User account = accountRepository.findByUsername(vo.getUsername())
+                                             .orElseThrow(() -> new RuntimeException("用户不存在"));
+        // 更新密码
+        account.setPassword(passwordEncoder.encode(newPassword)); // 加密密码
+        // 保存更新后的用户信息
+        accountRepository.save(account);
+    }
+
 }

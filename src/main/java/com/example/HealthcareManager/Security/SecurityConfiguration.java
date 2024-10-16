@@ -44,7 +44,8 @@ public class SecurityConfiguration {
 		}))
 		.csrf(csrf -> csrf.disable())
 				.authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/**").permitAll()
+                        .requestMatchers("/**","/static/**", "/images/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authenticationProvider(authenticationProvider)

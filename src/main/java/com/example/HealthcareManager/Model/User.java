@@ -40,7 +40,9 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-	private LocalDate MembershipEndDate; 
+	private LocalDate MembershipEndDate;
+	
+	private LocalDateTime tokenExpiration;
     
  public User(String id, String username, String email, String password, LocalDate dateOfBirth, Double height,
 			Double weight, String gender, String imagelink, String phoneNumber, String role, String verificationToken,
@@ -91,6 +93,14 @@ public class User {
         this.email = email;
         this.role = role;
     }
+
+	public LocalDateTime getTokenExpiration() {
+		return tokenExpiration;
+	}
+
+	public void setTokenExpiration(LocalDateTime tokenExpiration) {
+		this.tokenExpiration = tokenExpiration;
+	}
 
 	public String getPhoneNumber() {
 		return phoneNumber;

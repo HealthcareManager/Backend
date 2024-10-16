@@ -122,10 +122,14 @@ public class UserController {
         }
 
         try {
-            String uploadDir = new File(System.getProperty("user.dir"))
-                    .getAbsolutePath() + File.separator + "src"
+//            String uploadDir = new File(System.getProperty("user.dir"))
+//                    .getAbsolutePath() + File.separator + "src"
+//                    + File.separator + "main" + File.separator + "resources"
+//                    + File.separator + "static" + File.separator + "images"; // 確保該路徑正確
+        	String uploadDir = "E:" + File.separator + "HealthcareManager" + File.separator + "src"
                     + File.separator + "main" + File.separator + "resources"
-                    + File.separator + "static" + File.separator + "images"; // 確保該路徑正確
+                    + File.separator + "static" + File.separator + "images";
+            System.out.println("uploadDir is " + uploadDir);
 
             // 查詢資料庫以獲取原有的圖片路徑
             User user = userService.getUserById(id);
@@ -138,9 +142,9 @@ public class UserController {
             Files.write(filePath, file.getBytes());
 
             // 更新為正確的基本 URL
-            // String baseUrl = "http://192.168.50.38:8080/HealthcareManager/"; //
+            String baseUrl = "https://healthcaremanager.myvnc.com:8443/HealthcareManager/"; //
             // 確保這裡的端口和地址正確
-            String baseUrl = "http://10.0.2.2:8080/";
+            //String baseUrl = "http://10.0.2.2:8080/";
             String relativeImagePath = "images/" + fileName;
             String fullImageUrl = baseUrl + relativeImagePath;
 

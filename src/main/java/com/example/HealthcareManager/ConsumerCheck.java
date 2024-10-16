@@ -152,6 +152,8 @@ public class ConsumerCheck {
                             // 計算新的 membership_end_date
                             LocalDate newEndDate = currentEndDate.plusMonths(months); // 在原日期上加上月份數
                             user.setMembershipEndDate(newEndDate); // 更新用戶的會員到期日期
+                        } else {
+                        	user.setMembershipEndDate(LocalDate.now().plusMonths(months));
                         }
 
                     } else {
