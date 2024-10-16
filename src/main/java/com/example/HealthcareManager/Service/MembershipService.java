@@ -28,7 +28,7 @@ public class MembershipService {
         		System.out.println("找到用户: " + user.getUsername());
                 // 执行您需要的逻辑
         		if (user.getMembershipEndDate().isBefore(now) && "VIP".equals(user.getRole())) {
-        		    System.out.println("找到過期用户: " + user.getUsername());
+        		    //System.out.println("找到過期用户: " + user.getUsername());
         		    
         		    // 将角色更新为 USER
         		    user.setRole("USER");
