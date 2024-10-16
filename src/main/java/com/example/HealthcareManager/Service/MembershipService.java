@@ -42,7 +42,7 @@ public class MembershipService {
         		    if ("USER".equals(user.getRole())) {
         		        // 发送 WebSocket 消息
         		        webSocketHandler.sendMembershipUpdate(user);
-        		        System.out.println("会员状态已更新，发送 WebSocket 消息");
+        		        System.out.println("會員狀態已更新，發送 WebSocket 訊息");
         		    }
         		}
 
